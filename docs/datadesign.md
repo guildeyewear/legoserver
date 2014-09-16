@@ -32,7 +32,8 @@ The initial version contains the following collections.
 
 Accounts represent stores that are selling GUILD eyewear frames. The online store can be thought of as an internal "account". Accounts have access to groups of designs (called collections) that they can sell.  They may be entitled to a discount on some collections.  Each account may have several AccountUsers who are entitled to log in and sell glasses for the account.
 
-`Accounts {
+```javascript
+Accounts {
     _id: bson.ObjectID,
     name: string, // The human-readable name of the account
     locations: [ // Physical location of stores, if any
@@ -56,11 +57,13 @@ Accounts represent stores that are selling GUILD eyewear frames. The online stor
     discount: {
         string: float32, // Map of collection name to discount for that collection
     },
-}`
+}
+```
 
 AccountUsers are usually employees of the optical stores selling GUILD glasses.  They may log into the various applications (iPad application, web app) for that Account using unique creditials.  That allows us to tie activies within an account to a particual employee and also gives the store the ability to add and remove access for employees.
 
-`AccountUser {
+```javascript
+AccountUser {
     _id: string, // Unique id for the user, probably an email address
     account: bson.ObjectId, // ----> Account document
     firstname: string,
@@ -68,11 +71,13 @@ AccountUsers are usually employees of the optical stores selling GUILD glasses. 
     type: int16, // 0 == sales, 1 == admin
     pwSalt: string,
     pwHash: string, // Secure hash of password + application salt + user salt
-}`
+}
+```
 
 Customers are people who actually wear the glasses. Their primary attribute is their sizing information, which is used to manufacture the glasses for a custom fit. They might have their own login information (login id and password), for example for use with the website, or they might not, for example if they are a client of one of the optical stores.
 
-`Customer {
+```javascript
+Customer {
     _id: bson.ObjectId,
     email: string, // Used for a login scenario
     pwSalt: string,
@@ -90,11 +95,13 @@ Customers are people who actually wear the glasses. Their primary attribute is t
         templeWidth: int16, 
         faceWidth: int16, 
     },
-}`
+}
+```
 
 Designs are the primary entity of the system, representing a fully-specified frame design. Customizations are specified in the individual orders of the designs and represent either parametric modifications to the design or concrete choices among possibilities specified in the design. Designs are grouped by collection, which is contained as an array within the design itself.
 
-`Design {
+```javascript
+Design {
     _id: bson.ObjectId,
     name: string,
     front: { // The main front part of the frames
@@ -147,11 +154,13 @@ Designs are the primary entity of the system, representing a fully-specified fra
     },
     collections: [string, string...], // The collections this design belongs to 
     designer: string, // The designer of this frame ----> AccountUser
-}`
+}
+```
 
 Materials represent the raw material - at this point various kinds of cellulose acetate - that the glasses can be made from. 
 
-`Materials {
+```javascript
+Materials {
     _id: bson.ObjectID,
     name: string,
     topColor: string, // Hexadecimal color representation
@@ -168,11 +177,13 @@ Materials represent the raw material - at this point various kinds of cellulose 
     photoUrls: [ // URLs of photographic examples of glasses made with this material
         string, string... // Encoded URLs
     ],
-}`
+}
+```
 
 Orders are a customer request for a pair of glasses.
 
-`Orders {
+```javascript
+Orders {
     _id: bson.ObjectID,
     account: bson.ObjectID, -----> Accounts
     customer: bson.ObjectID, -----> Customers
@@ -189,4 +200,5 @@ Orders are a customer request for a pair of glasses.
         status: string, // not_due, due, overdue, paid, etc.
         closedOn: time, // When the invoice was closed
     } 
-}`
+}
+```
