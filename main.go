@@ -53,7 +53,7 @@ func mapRoutes() {
 	// Map controllers
 	goweb.MapController("/accounts", &accountController{})
 	goweb.MapController("/users", &userController{})
-	goweb.MapController("/collections", newCollectionsController())
+	goweb.MapController("/collections", &collectionsController{})
 	goweb.Map("/importdesign", importDesign)
 
 	// Map status code responses for testing
@@ -125,6 +125,6 @@ func main() {
 	// Set up the API responder
 	mapRoutes()
 
-	log.Println("Listening on port ", port)
+	log.Println("Listening on port", port)
 	http.ListenAndServe(":"+port, goweb.DefaultHttpHandler())
 }

@@ -7,14 +7,12 @@ import (
 	"github.com/stretchr/goweb/context"
 )
 
-type collectionsController struct {
-	collections []string
-}
+type collectionsController struct{}
 
-func newCollectionsController() *collectionsController {
-	c := collectionsController{}
-	c.collections = []string{"Temples"}
-	return &c
+func (c *collectionsController) ReadMany(ctx context.Context) error {
+	templates := []string{"Templates"}
+	log.Println("Returning array")
+	return goweb.API.RespondWithData(ctx, templates)
 }
 
 func (c *collectionsController) Read(collection string, ctx context.Context) error {
