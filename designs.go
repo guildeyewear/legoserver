@@ -86,8 +86,9 @@ func importDesign(ctx context.Context) error {
 }
 
 type RenderResponse struct {
-	Url      string  `json:"url"`
-	Y_offset float64 `json:"y_offset"`
+	Url           string  `json:"url"`
+	Y_offset      float64 `json:"y_offset"`
+	PixelsDensity int16   `json:"pixels_per_mm"`
 }
 
 // Design controller
@@ -164,7 +165,7 @@ func getDesignRender(ctx context.Context) error {
 	url := fmt.Sprintf("http://%v/static/%v", ctx.HttpRequest().Host, filename)
 	saveToPngFile(filename, im)
 
-	dinfo := RenderResponse{url, 900 - origin}
+	dinfo := RenderResponse{url, 900 - origin, 10}
 	return goweb.API.RespondWithData(ctx, dinfo)
 }
 
