@@ -78,8 +78,6 @@ func importDesign(ctx context.Context) error {
 	temple.TempleHeight = int16(location["y"].(float64) * 100)
 	design.Temple = temple
 
-	log.Println("Constructed design, saving")
-
 	if err = insertDesign(&design); err != nil {
 		return goweb.API.RespondWithError(ctx, 500, err.Error())
 	}
@@ -88,8 +86,8 @@ func importDesign(ctx context.Context) error {
 }
 
 type RenderResponse struct {
-	Url      string  `json: "url"`
-	Y_offset float64 `json: "y_offset"`
+	Url      string  `json:"url"`
+	Y_offset float64 `json:"y_offset"`
 }
 
 // Design controller
@@ -110,7 +108,6 @@ func getDesignRender(ctx context.Context) error {
 	im := image.NewRGBA(image.Rect(0, 0, 2000, 900))
 
 	origin := left[len(left)-1][1]
-	log.Println("Starting origin is %v", origin)
 
 	bzs := left.convertToBeziers(false, true)
 	bzs_r := right.convertToBeziers(false, true)
@@ -126,14 +123,9 @@ func getDesignRender(ctx context.Context) error {
 		gc.CubicCurveTo(bez[2][0], bez[2][1], bez[1][0], bez[1][1], bez[0][0], bez[0][1])
 	}
 	gc.FillStroke()
-	/*
-		gc.MoveTo(bzs_r[0][0][0], bzs_r[0][0][1])
-		for _, bez := range bzs_r {
-			gc.CubicCurveTo(bez[1][0], bez[1][1], bez[2][0], bez[2][1], bez[3][0], bez[3][1])
-		}
-		gc.FillStroke()
-	*/
-	gc.SetFillColor(color.RGBA{0xFF, 0xFF, 0xFF, 0x00})
+
+	lensColor := color.RGBA{255, 255, 255, 255}
+	gc.SetFillColor(lensColor)
 	lens_l := des.Front.Lens.scale(10)
 	lens_r := des.Front.Lens.scale(10)
 	for i, pt := range lens_l {
@@ -153,9 +145,20 @@ func getDesignRender(ctx context.Context) error {
 	}
 	gc.FillStroke()
 
-	gc.MoveTo(0, origin)
-	gc.LineTo(2000, origin)
-	gc.Stroke()
+	// Convert all white to transparent
+	bounds := im.Bounds()
+	count := 0
+	changed := 0
+	for i := bounds.Min.X; i <= bounds.Max.X; i++ {
+		for j := bounds.Min.Y; j <= bounds.Max.Y; j++ {
+			count++
+			if im.At(i, j) == lensColor {
+				im.Set(i, j, image.Transparent)
+				changed++
+			}
+		}
+	}
+	log.Printf("Examined %v pixels and changed %v", count, changed)
 
 	filename := fmt.Sprintf("%v.png", designId.Str())
 	url := fmt.Sprintf("http://%v/static/%v", ctx.HttpRequest().Host, filename)
