@@ -92,7 +92,7 @@ type (
 		PwHash    string     `bson:"pwhash" json:"-"`
 		AccountId string     `bson:"account_id" json:"-"`
 		Person    PersonInfo `bson:"person,omitempty" json:"person,omitempty"`
-		Type      int16      `bson:"usertype" json:"usertype"`
+		Type      byte       `bson:"usertype" json:"usertype"`
 		Created   time.Time  `bson:"created" json:"-"`
 		Updated   time.Time  `bson:"updated" json:"updated"`
 	}
@@ -161,7 +161,7 @@ type (
 		Name                   string        `bson:"name" json:"name"`
 		TopThickness           int16         `bson:"top_thickness" json:"top_thickness"`
 		TopColor               string        `bson:"top_color" json:"top_color"`
-		TopOpacity             int16         `bson:"top_opacity" json:"top_opacity"`
+		TopOpacity             float64       `bson:"top_opacity" json:"top_opacity"`
 		TopPattern             []byte        `bson:"top_pattern,omitempty" json:"top_pattern"`
 		TopManufacturerCode    string        `bson:"top_manufacturer_code" json:"-"`
 		BottomThickness        int16         `bson:"bottom_thickness,omitempty" json:"bottom_thickness,omitempty"`
@@ -203,8 +203,39 @@ type (
 	}
 )
 
+// Materials objects
+func findMaterialById(id string) (m Material, err error) {
+	log.Printf("Looking for material with id %v", id)
+	withCollection("materials", func(c *mgo.Collection) {
+		err = c.FindId(bson.ObjectIdHex(id)).One(&m)
+	})
+	return
+}
+
+func getAllMaterials() (materials []Material, err error) {
+	withCollection("materials", func(c *mgo.Collection) {
+		err = c.Find(nil).All(&materials)
+	})
+	return
+}
+
+func updateMaterial(mat Material) (err error) {
+	withCollection("materials", func(c *mgo.Collection) {
+		err = c.UpdateId(mat.Id, mat)
+	})
+	return
+}
+
+func createMaterial(mat *Material) (err error) {
+	mat.Id = bson.NewObjectId()
+	withCollection("materials", func(c *mgo.Collection) {
+		err = c.Insert(mat)
+	})
+	return
+}
+
 // Account objects
-func findAccountById(id string) (err error, a Account) {
+func findAccountById(id string) (a Account, err error) {
 	log.Printf("Looking for account with id %v", id)
 	withCollection("accounts", func(c *mgo.Collection) {
 		err = c.FindId(id).One(&a)

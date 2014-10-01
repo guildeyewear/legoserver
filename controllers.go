@@ -18,20 +18,73 @@ type Getter interface {
 // Controllers for GUILD eyewear lego site
 // Uses goweb github.com/stretchr/goweb
 type (
-	accountController struct{}
-	userController    struct{}
+	accountController   struct{}
+	userController      struct{}
+	materialsController struct{}
 )
+
+// Authorization
+func requireAuth(requiredUserLevel byte, ctx context.Context) bool {
+	log.Println("Checking if user has authorization")
+	user := ctx.Data()["user"]
+	log.Printf("User is %v", user)
+	if user == nil {
+		log.Println("Returning unauthorized")
+		return false
+	}
+	ut := user.(User).Type
+	if ut|requiredUserLevel == 0 {
+		return false
+	}
+	return true
+}
+
+// Materials controller
+
+func (m *materialsController) Read(id string, ctx context.Context) error {
+	mat, err := findMaterialById(id)
+	if err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	}
+	return goweb.API.WriteResponseObject(ctx, 200, mat)
+}
+func (m *materialsController) Create(ctx context.Context) error {
+	if !requireAuth(USER_SYSTEM_ADMIN, ctx) {
+		return goweb.API.RespondWithError(ctx, 401, "Unauthorized")
+	}
+
+	var mat Material
+	data, err := ctx.RequestBody()
+
+	if err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	}
+
+	if err := json.Unmarshal(data, &mat); err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	}
+
+	if err := createMaterial(&mat); err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	}
+	return goweb.API.WriteResponseObject(ctx, 301, mat)
+}
+
+func (m *materialsController) ReadMany(ctx context.Context) error {
+	log.Println("Getting all materials")
+	materials, err := getAllMaterials()
+	log.Printf("Materials %v", materials)
+	if err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	}
+	return goweb.API.RespondWithData(ctx, materials)
+}
 
 // Account controller functions
 func (a *accountController) Read(id string, ctx context.Context) error {
 	log.Println("Getting user")
 	// Get the authenticated user
 	user := ctx.Data()["user"]
-	log.Printf("User is %v", user)
-	if user == nil {
-		return goweb.API.RespondWithError(ctx, 401, "Unauthorized")
-	}
-
 	return goweb.API.WriteResponseObject(ctx, 200, user)
 }
 
