@@ -55,6 +55,7 @@ func mapRoutes() {
 	goweb.MapController("/users", &userController{})
 	goweb.MapController("/collections", &collectionsController{})
 	goweb.Map("/importdesign", importDesign)
+	goweb.Map("/designs/{id}/render", getDesignRender)
 
 	// Map status code responses for testing
 	goweb.Map("/status-code/{code}", func(c context.Context) error {
@@ -72,16 +73,6 @@ func mapRoutes() {
 	goweb.Map("/errortest", func(c context.Context) error {
 		return errors.New("This is a test error!")
 	})
-
-	//		Map a handler for if they hit just numbers using the goweb.RegexPath
-	//		function.
-	//
-	//		e.g. GET /2468
-	//
-	//		NOTE: The goweb.RegexPath is a MatcherFunc, and so comes _after_ the
-	goweb.Map(func(c context.Context) error {
-		return goweb.API.RespondWithData(c, "Just a number!")
-	}, goweb.RegexPath(`^[0-9]+$`))
 
 	//	Map the static-files directory so it's exposed as /static
 	goweb.MapStatic("/static", "static-files")

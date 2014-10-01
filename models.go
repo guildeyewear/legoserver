@@ -16,9 +16,9 @@ var (
 )
 
 const (
-	USER_NORMAL        = iota
-	USER_ACCOUNT_ADMIN = iota
-	USER_SYSTEM_ADMIN  = iota
+	USER_NORMAL        = 1 << iota
+	USER_ACCOUNT_ADMIN = 1 << iota
+	USER_SYSTEM_ADMIN  = 1 << iota
 )
 
 // Model entities for the GUILD web application.
@@ -103,9 +103,9 @@ type (
 	// This is not a MongoDB collection but rather an embedded document
 	// within the Temple and Front documents.
 	Engraving struct {
-		Depth int16        `bson:"depth" json:"depth"`
-		Angle int16        `bson:"cutter_angle" json:"cutter_angle"`
-		Paths [][][2]int16 `bson:"paths" json:"paths"`
+		Depth int16     `bson:"depth" json:"depth"`
+		Angle int16     `bson:"cutter_angle" json:"cutter_angle"`
+		Paths []BSpline `bson:"paths" json:"paths"`
 	}
 
 	// Temple describes the arms of the glasses.  The assumption is that
@@ -116,7 +116,7 @@ type (
 	// Temple is not a MongoDB collection but rather is an embedded document within
 	// a Design document.
 	Temple struct {
-		Contour          [][2]int16      `bson:"contour" json:"contour"`
+		Contour          BSpline         `bson:"contour" json:"contour"`
 		Materials        []bson.ObjectId `bson:"materials" json:"-"`
 		Engraving        Engraving       `bson:"engraving,omitempty" json:"engraving,omitempty"`
 		LeftText         string          `bson:"left_text,omitempty" json:"left_text,omitempty"`
@@ -132,9 +132,9 @@ type (
 	// Front is not a MongoDB collection but rather is an embedded document within
 	// a Design document.
 	Front struct {
-		Outercurve [][2]int16      `bson:"outer_curve" json:"outer_curve"`
-		Lens       [][2]int16      `bson:"lens" json:"lens"`
-		Holes      [][][2]int16    `bson:"holes,omitempty" json:"holes,omitempty"`
+		Outercurve BSpline         `bson:"outer_curve" json:"outer_curve"`
+		Lens       BSpline         `bson:"lens" json:"lens"`
+		Holes      []BSpline       `bson:"holes,omitempty" json:"holes,omitempty"`
 		Engraving  Engraving       `bson:"engraving,omitempty" json:"engraving,omitempty"`
 		Materials  []bson.ObjectId `bson:"materials" json:"-"`
 	}
@@ -251,6 +251,14 @@ func insertDesign(design *Design) (err error) {
 	log.Printf("Trying to insert design %v", design)
 	withCollection("designs", func(c *mgo.Collection) {
 		err = c.Insert(design)
+	})
+	return
+}
+
+func findDesignById(id string) (d Design, err error) {
+	log.Printf("Looking for design with id %v", id)
+	withCollection("designs", func(c *mgo.Collection) {
+		err = c.FindId(bson.ObjectIdHex(id)).One(&d)
 	})
 	return
 }
