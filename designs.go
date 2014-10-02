@@ -85,35 +85,67 @@ func importDesign(ctx context.Context) error {
 	return goweb.API.WriteResponseObject(ctx, 201, design)
 }
 
-type RenderResponse struct {
-	Url           string  `json:"url"`
-	Y_offset      float64 `json:"y_offset"`
-	PixelsDensity int16   `json:"pixels_per_mm"`
-}
-
 // Design controller
 func getDesignRender(ctx context.Context) error {
+	// Load the design
 	designId := ctx.PathParams().Get("id")
 	des, err := findDesignById(designId.Str())
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
+
+	// Load the frame material. Default to black.
+	materialId := "542c5f3bc296ec236005bffa" // black
+	materialId = "542d7ad1119e3247afd88f82"  // havana
+	if matId := ctx.FormValue("materialid"); len(matId) > 0 {
+		materialId = matId
+	}
+
 	left := des.Front.Outercurve.scale(10)
 	right := des.Front.Outercurve.scale(10)
+	// The Y coordinate of the bottom of the bridge of the glasses, relative to the HRL
+	origin := left[len(left)-1][1]
 
+	filename := fmt.Sprintf("%v-%v.png", designId.Str(), materialId)
+	url := fmt.Sprintf("http://%v/static/%v", ctx.HttpRequest().Host, filename)
+	type renderResponse struct {
+		Url           string  `json:"url"`
+		Y_offset      float64 `json:"y_offset"`
+		PixelsDensity int16   `json:"pixels_per_mm"`
+	}
+	fstat, err := os.Stat(fmt.Sprintf("./static-files/%v", filename))
+	if err == nil {
+		render_time := fstat.ModTime()
+		if render_time.After(des.Updated) {
+			log.Println("Returning cached render info")
+			dinfo := renderResponse{url, 900 - origin, 10}
+			return goweb.API.RespondWithData(ctx, dinfo)
+		}
+	}
+
+	material, err := findMaterialById(materialId)
+	if err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	}
+	// PNG image.  Dimensions by convention, correspond to 1mm : 10px
+	im := image.NewRGBA(image.Rect(0, 0, 2000, 900))
+
+	// Offset the frame so it just fits on the canvas
 	_, miny := left.minValues()
 	for i, pt := range left {
 		left[i] = Point{pt[0] + 1000, pt[1] - miny}     // Center on graphic
 		right[i] = Point{pt[0]*-1 + 1000, pt[1] - miny} // Center on graphic
 	}
-	im := image.NewRGBA(image.Rect(0, 0, 2000, 900))
 
-	origin := left[len(left)-1][1]
+	dc := material.TopColor
+	fillColor := color.RGBA{uint8(dc[0]), uint8(dc[1]), uint8(dc[2]), uint8(dc[3])}
 
+	// Get the curves for the outer contour
 	bzs := left.convertToBeziers(false, true)
 	bzs_r := right.convertToBeziers(false, true)
 	gc := draw2d.NewGraphicContext(im)
-	gc.SetFillColor(image.Black)
+	gc.SetFillColor(fillColor)
+	gc.SetStrokeColor(fillColor)
 
 	gc.MoveTo(bzs[0][0][0], bzs[0][0][1])
 	for _, bez := range bzs {
@@ -124,6 +156,29 @@ func getDesignRender(ctx context.Context) error {
 		gc.CubicCurveTo(bez[2][0], bez[2][1], bez[1][0], bez[1][1], bez[0][0], bez[0][1])
 	}
 	gc.FillStroke()
+
+	if len(material.TopTexture) > 0 {
+		// load the image of top texture and apply it
+		if imFile, err := os.Open(material.TopTexture); err == nil {
+			defer imFile.Close()
+			if textIm, _, err2 := image.Decode(imFile); err2 == nil {
+				bounds := im.Bounds()
+				for i := bounds.Min.X; i <= bounds.Max.X; i++ {
+					for j := bounds.Min.Y; j <= bounds.Max.Y; j++ {
+						if im.At(i, j) == fillColor {
+							r, g, b, a := textIm.At(i, j).RGBA()
+							im.Set(i, j, color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a) - 20})
+						}
+					}
+				}
+			} else {
+				log.Printf("Error! %v", err2.Error())
+			}
+		} else {
+			log.Printf("Error! %v", err.Error())
+		}
+
+	}
 
 	lensColor := color.RGBA{255, 255, 255, 255}
 	gc.SetFillColor(lensColor)
@@ -148,24 +203,17 @@ func getDesignRender(ctx context.Context) error {
 
 	// Convert all white to transparent
 	bounds := im.Bounds()
-	count := 0
-	changed := 0
 	for i := bounds.Min.X; i <= bounds.Max.X; i++ {
 		for j := bounds.Min.Y; j <= bounds.Max.Y; j++ {
-			count++
 			if im.At(i, j) == lensColor {
 				im.Set(i, j, image.Transparent)
-				changed++
 			}
 		}
 	}
-	log.Printf("Examined %v pixels and changed %v", count, changed)
 
-	filename := fmt.Sprintf("%v.png", designId.Str())
-	url := fmt.Sprintf("http://%v/static/%v", ctx.HttpRequest().Host, filename)
 	saveToPngFile(filename, im)
 
-	dinfo := RenderResponse{url, 900 - origin, 10}
+	dinfo := renderResponse{url, 900 - origin, 10}
 	return goweb.API.RespondWithData(ctx, dinfo)
 }
 

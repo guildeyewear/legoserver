@@ -156,18 +156,17 @@ type (
 	// will have a "bottom" variant, otherwise the "top" variant describes the
 	// material fully.  The manufacturer's code is the Mazzuccelli product code
 	// used for ordering. Stock indicates how many blanks are available.
+	Color    []uint16
 	Material struct {
-		Id                     bson.ObjectId `bson:"_id,omitempty" json:"-"`
+		Id                     bson.ObjectId `bson:"_id" json:"id"`
 		Name                   string        `bson:"name" json:"name"`
-		TopThickness           int16         `bson:"top_thickness" json:"top_thickness"`
-		TopColor               string        `bson:"top_color" json:"top_color"`
-		TopOpacity             float64       `bson:"top_opacity" json:"top_opacity"`
-		TopPattern             []byte        `bson:"top_pattern,omitempty" json:"top_pattern"`
+		TopThickness           float32       `bson:"top_thickness" json:"top_thickness"`
+		TopColor               Color         `bson:"top_color" json:"top_color"`
+		TopTexture             string        `bson:"top_texture,omitempty" json:"top_texture,omitempty"`
 		TopManufacturerCode    string        `bson:"top_manufacturer_code" json:"-"`
-		BottomThickness        int16         `bson:"bottom_thickness,omitempty" json:"bottom_thickness,omitempty"`
-		BottomColor            string        `bson:"bottom_color,omitempty" json:"bottom_color,omitempty"`
-		BottomOpacity          int16         `bson:"bottom_opacity,omitempty" json:"bottom_opacity,omitempty"`
-		BottomPattern          []byte        `bson:"bottom_pattern,omitempty" json:"bottom_pattern,omitempty"`
+		BottomThickness        float32       `bson:"bottom_thickness,omitempty" json:"bottom_thickness,omitempty"`
+		BottomColor            Color         `bson:"bottom_color,omitempty" json:"bottom_color,omitempty"`
+		BottomTexture          string        `bson:"bottom_texture,omitempty" json:"bottom_texture,omitempty"`
 		BottomManufacturerCode string        `bson:"bottom_manufacturer_code,omitempty" json:"bottom_manufacturer_code,omitempty"`
 		Stock                  int32         `bson:"stock" json:"stock"`
 		PhotoUrls              []string      `bson:"photo_urls,omitempty" json:"photo_urls,omitempty"`

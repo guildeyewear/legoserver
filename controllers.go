@@ -46,6 +46,7 @@ func (m *materialsController) Read(id string, ctx context.Context) error {
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
+	log.Printf("Got material %v", mat)
 	return goweb.API.WriteResponseObject(ctx, 200, mat)
 }
 func (m *materialsController) Create(ctx context.Context) error {
