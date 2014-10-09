@@ -90,7 +90,7 @@ type (
 		Password  string     `bson:"-" json:"-"`
 		PwSalt    string     `bson:"pwsalt" json:"-"`
 		PwHash    string     `bson:"pwhash" json:"-"`
-		AccountId string     `bson:"account_id" json:"-"`
+		AccountId string     `bson:"account_id" json:"account_id,omitempty"`
 		Person    PersonInfo `bson:"person,omitempty" json:"person,omitempty"`
 		Type      byte       `bson:"usertype" json:"usertype"`
 		Created   time.Time  `bson:"created" json:"-"`
@@ -176,7 +176,7 @@ type (
 	// references to the account, the user who entered the order, information about the customer,
 	// and various customizations to the design.
 	Order struct {
-		Id              bson.ObjectId `bson:"_id,omitempty" json:"-"`
+		Id              bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 		AccountId       bson.ObjectId `bson:"account_id" json:"account_id"`
 		CustomerInfo    PersonInfo    `bson:"customer_info" json:"customer_info"`
 		UserId          string        `bson:"user_id" json:"user_id"`
