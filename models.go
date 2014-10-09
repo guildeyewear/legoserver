@@ -54,15 +54,15 @@ type (
 	// is describing a customer. This is not a MongoDB collection
 	// but rather an embedded document within a PersonInfo document.
 	SizeInfo struct {
-		PD           int16 `bson:"pd,omitempty" json:"pd,omitempty"`
-		Splay        int16 `bson:"splayangle,omitempty" json:"splayangle,omitempty"`
-		Ridge        int16 `bson:"ridgeangle,omitempty" json:"ridgeangle,omitempty"`
-		NoseHeight   int16 `bson:"noseheight,omitempty" json:"noseheight,omitempty"`
-		NoseRadius   int16 `bson:"noseradius,omitempty" json:"noseradius,omitempty"`
-		TempleLength int16 `bson:"templelength,omitempty" json:"templelength,omitempty"`
-		EarHeight    int16 `bson:"earheight,omitempty" json:"earheight,omitempty"`
-		TempleWidth  int16 `bson:"templewidth,omitempty" json:"templewidth,omitempty"`
-		FaceWidth    int16 `bson:"facewidth,omitempty" json:"facewidth,omitempty"`
+		PD           int16 `bson:"pd" json:"pd,omitempty"`
+		Splay        int16 `bson:"splayangle" json:"splayangle,omitempty"`
+		Ridge        int16 `bson:"ridgeangle" json:"ridgeangle,omitempty"`
+		NoseHeight   int16 `bson:"noseheight" json:"noseheight,omitempty"`
+		NoseRadius   int16 `bson:"noseradius" json:"noseradius,omitempty"`
+		TempleLength int16 `bson:"templelength" json:"templelength,omitempty"`
+		EarHeight    int16 `bson:"earheight" json:"earheight,omitempty"`
+		TempleWidth  int16 `bson:"templewidth" json:"templewidth,omitempty"`
+		FaceWidth    int16 `bson:"facewidth" json:"facewidth,omitempty"`
 	}
 
 	// Account is a customer of GUILD eyewear, usually a optometry store.
@@ -86,15 +86,15 @@ type (
 	// login id and password.  Each employee would be an AccountUser.
 	// AccountUser is a MongoDB collection.
 	User struct {
-		Id        string     `bson:"_id,omitempty" json:"id"`
-		Password  string     `bson:"-" json:"-"`
-		PwSalt    string     `bson:"pwsalt" json:"-"`
-		PwHash    string     `bson:"pwhash" json:"-"`
-		AccountId string     `bson:"account_id" json:"account_id,omitempty"`
-		Person    PersonInfo `bson:"person,omitempty" json:"person,omitempty"`
-		Type      byte       `bson:"usertype" json:"usertype"`
-		Created   time.Time  `bson:"created" json:"-"`
-		Updated   time.Time  `bson:"updated" json:"updated"`
+		Id        string        `bson:"_id,omitempty" json:"id"`
+		Password  string        `bson:"-" json:"-"`
+		PwSalt    string        `bson:"pwsalt" json:"-"`
+		PwHash    string        `bson:"pwhash" json:"-"`
+		AccountId bson.ObjectId `bson:"account_id" json:"account_id,omitempty"`
+		Person    PersonInfo    `bson:"person,omitempty" json:"person,omitempty"`
+		Type      byte          `bson:"usertype" json:"usertype"`
+		Created   time.Time     `bson:"created" json:"-"`
+		Updated   time.Time     `bson:"updated" json:"updated"`
 	}
 
 	// Engraving describes any special patterns that might be on a

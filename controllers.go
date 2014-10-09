@@ -50,6 +50,9 @@ func (o *ordersController) Create(ctx context.Context) error {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	} else {
 		if err = json.Unmarshal(data, &order); err != nil {
+			user := ctx.Data()["user"].(User)
+			order.UserId = user.Id
+			order.AccountId = user.AccountId
 			return goweb.API.RespondWithError(ctx, 400, err.Error())
 		}
 		if err = createOrder(&order); err != nil {
