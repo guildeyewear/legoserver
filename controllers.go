@@ -56,7 +56,7 @@ func (o *ordersController) Create(ctx context.Context) error {
 			return goweb.API.RespondWithError(ctx, 400, err.Error())
 		}
 	}
-	return goweb.API.WriteResponseObject(ctx, 301, order)
+	return goweb.API.WriteResponseObject(ctx, 201, order)
 }
 
 func (o *ordersController) Read(id string, ctx context.Context) error {
@@ -96,7 +96,7 @@ func (m *materialsController) Create(ctx context.Context) error {
 	if err := createMaterial(&mat); err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
-	return goweb.API.WriteResponseObject(ctx, 301, mat)
+	return goweb.API.WriteResponseObject(ctx, 201, mat)
 }
 
 func (m *materialsController) ReadMany(ctx context.Context) error {
@@ -131,7 +131,7 @@ func (a *accountController) Create(ctx context.Context) error {
 	if err := createAccount(&acct); err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
-	return a.Read(acct.Id.Hex(), ctx)
+	return goweb.API.WriteResponseObject(ctx, 201, acct)
 }
 
 // User controller functions
