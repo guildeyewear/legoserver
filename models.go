@@ -16,9 +16,9 @@ var (
 )
 
 const (
-	USER_NORMAL        = 1 << iota
-	USER_ACCOUNT_ADMIN = 1 << iota
-	USER_SYSTEM_ADMIN  = 1 << iota
+	USER_NORMAL = 1 << iota
+	USER_ACCOUNT_ADMIN
+	USER_SYSTEM_ADMIN
 )
 
 // Model entities for the GUILD web application.
@@ -117,7 +117,7 @@ type (
 	// a Design document.
 	Temple struct {
 		Contour          BSpline         `bson:"contour" json:"contour"`
-		Materials        []bson.ObjectId `bson:"materials" json:"-"`
+		Materials        []bson.ObjectId `bson:"materials" json:"materials"`
 		Engraving        Engraving       `bson:"engraving,omitempty" json:"engraving,omitempty"`
 		LeftText         string          `bson:"left_text,omitempty" json:"left_text,omitempty"`
 		RightText        string          `bson:"right_text,omitempty" json:"right_text,omitempty"`
@@ -136,7 +136,7 @@ type (
 		Lens       BSpline         `bson:"lens" json:"lens"`
 		Holes      []BSpline       `bson:"holes,omitempty" json:"holes,omitempty"`
 		Engraving  Engraving       `bson:"engraving,omitempty" json:"engraving,omitempty"`
-		Materials  []bson.ObjectId `bson:"materials" json:"-"`
+		Materials  []bson.ObjectId `bson:"materials" json:"materials"`
 	}
 
 	// Design describes a complete frame design, including the geometry, size
@@ -229,6 +229,22 @@ func createMaterial(mat *Material) (err error) {
 	mat.Id = bson.NewObjectId()
 	withCollection("materials", func(c *mgo.Collection) {
 		err = c.Insert(mat)
+	})
+	return
+}
+
+// Orders
+func createOrder(order *Order) (err error) {
+	order.Id = bson.NewObjectId()
+	withCollection("orders", func(c *mgo.Collection) {
+		err = c.Insert(order)
+	})
+	return
+}
+
+func findOrderById(id string) (o Order, err error) {
+	withCollection("orders", func(c *mgo.Collection) {
+		err = c.FindId(bson.ObjectIdHex(id)).One(&o)
 	})
 	return
 }

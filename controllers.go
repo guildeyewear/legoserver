@@ -21,6 +21,7 @@ type (
 	accountController   struct{}
 	userController      struct{}
 	materialsController struct{}
+	ordersController    struct{}
 )
 
 // Authorization
@@ -37,6 +38,33 @@ func requireAuth(requiredUserLevel byte, ctx context.Context) bool {
 		return false
 	}
 	return true
+}
+
+// Orders
+func (o *ordersController) Create(ctx context.Context) error {
+	if !requireAuth(USER_NORMAL, ctx) {
+		return goweb.API.RespondWithError(ctx, 401, "Unauthorized")
+	}
+	var order Order
+	if data, err := ctx.RequestBody(); err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	} else {
+		if err = json.Unmarshal(data, &order); err != nil {
+			return goweb.API.RespondWithError(ctx, 400, err.Error())
+		}
+		if err = createOrder(&order); err != nil {
+			return goweb.API.RespondWithError(ctx, 400, err.Error())
+		}
+	}
+	return goweb.API.WriteResponseObject(ctx, 301, order)
+}
+
+func (o *ordersController) Read(id string, ctx context.Context) error {
+	order, err := findOrderById(id)
+	if err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	}
+	return goweb.API.WriteResponseObject(ctx, 200, order)
 }
 
 // Materials controller
