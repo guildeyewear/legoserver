@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 	"math"
 )
 
@@ -57,22 +58,29 @@ func (bs BSpline) scale(factor float64) (scaled BSpline) {
 
 func (bs BSpline) convertToBeziers(closeCurve, forceHorizontal bool) (beziers []CubicBezier) {
 	if closeCurve {
-		beziers = make([]CubicBezier, len(bs)-1)
+		beziers = make([]CubicBezier, len(bs))
 	} else {
-		beziers = make([]CubicBezier, len(bs)-2)
+		beziers = make([]CubicBezier, len(bs)-1)
 	}
 
-	for i := 0; i < len(beziers); i++ {
+	for i := 0; i < len(beziers)-1; i++ {
 		// Calculate the two control points of each bezier
 		l := Line{bs[i], bs[i+1]}
 		beziers[i][1] = l.pointAt(0.333333333)
 		beziers[i][2] = l.pointAt(0.666666666)
 	}
+	// Last point is handled differently for open or closed curves
 	if closeCurve {
 		l := Line{bs[len(bs)-1], bs[0]}
 		beziers[len(beziers)-1][1] = l.pointAt(0.3333333333)
 		beziers[len(beziers)-1][2] = l.pointAt(0.6666666666)
-	} else if forceHorizontal {
+	} else {
+		idx := len(bs) - 1
+		l := Line{bs[idx-1], bs[idx]}
+		beziers[len(beziers)-1][1] = l.pointAt(0.333333333)
+		beziers[len(beziers)-1][2] = l.pointAt(0.666666666)
+	}
+	if forceHorizontal {
 		// Force open curve to have  horizontal ends
 		beziers[0][1][1] = bs[0][1]
 		beziers[len(beziers)-1][2][1] = bs[len(bs)-1][1]
@@ -94,5 +102,9 @@ func (bs BSpline) convertToBeziers(closeCurve, forceHorizontal bool) (beziers []
 		beziers[i][3] = l.pointAt(0.5)
 		beziers[i+1][0] = beziers[i][3]
 	}
+	if closeCurve {
+		log.Println(beziers)
+	}
+
 	return beziers
 }

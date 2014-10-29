@@ -118,6 +118,6 @@ func main() {
 	// Set up the API responder
 	mapRoutes()
 
-	log.Println("Listening on port", port)
+	log.Println("Listening intently on port", port)
 	http.ListenAndServe(":"+port, goweb.DefaultHttpHandler())
 }

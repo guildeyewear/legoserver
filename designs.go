@@ -87,6 +87,7 @@ func importDesign(ctx context.Context) error {
 
 // Design controller
 func getDesignRender(ctx context.Context) error {
+	log.Println("Getting design render")
 	// Load the design
 	designId := ctx.PathParams().Get("id")
 	des, err := findDesignById(designId.Str())
@@ -113,15 +114,15 @@ func getDesignRender(ctx context.Context) error {
 		Y_offset      float64 `json:"y_offset"`
 		PixelsDensity int16   `json:"pixels_per_mm"`
 	}
-	fstat, err := os.Stat(fmt.Sprintf("./static-files/%v", filename))
-	if err == nil {
-		render_time := fstat.ModTime()
-		if render_time.After(des.Updated) {
-			log.Println("Returning cached render info")
-			dinfo := renderResponse{url, 900 - origin, 10}
-			return goweb.API.RespondWithData(ctx, dinfo)
-		}
-	}
+	//	fstat, err := os.Stat(fmt.Sprintf("./static-files/%v", filename))
+	//	if err == nil {
+	//		render_time := fstat.ModTime()
+	//		if render_time.After(des.Updated) {
+	//			log.Println("Returning cached render info")
+	//			dinfo := renderResponse{url, 900 - origin, 10}
+	//			return goweb.API.RespondWithData(ctx, dinfo)
+	//		}
+	//	}
 
 	material, err := findMaterialById(materialId)
 	if err != nil {
