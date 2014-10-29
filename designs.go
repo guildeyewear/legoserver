@@ -97,7 +97,7 @@ func getDesignRender(ctx context.Context) error {
 
 	// Load the frame material. Default to black.
 	materialId := "542c5f3bc296ec236005bffa" // black
-	materialId = "542d7ad1119e3247afd88f82"  // havana
+	//materialId = "542d7ad1119e3247afd88f82"  // havana
 	if matId := ctx.FormValue("materialid"); len(matId) > 0 {
 		materialId = matId
 	}
@@ -183,6 +183,7 @@ func getDesignRender(ctx context.Context) error {
 
 	lensColor := color.RGBA{255, 255, 255, 255}
 	gc.SetFillColor(lensColor)
+	gc.SetStrokeColor(lensColor)
 	lens_l := des.Front.Lens.scale(10)
 	lens_r := des.Front.Lens.scale(10)
 	for i, pt := range lens_l {
