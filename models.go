@@ -236,6 +236,7 @@ func createMaterial(mat *Material) (err error) {
 // Orders
 func createOrder(order *Order) (err error) {
 	order.Id = bson.NewObjectId()
+	log.Printf("Created order id: %v", order.Id)
 	withCollection("orders", func(c *mgo.Collection) {
 		err = c.Insert(order)
 	})
