@@ -18,7 +18,9 @@ import (
 // endpoints to function handlers.  It's put into a
 // distinct function so that it can be called from test code.
 func mapRoutes() {
-	goweb.MapBefore(func(c context.Context) error {
+	goweb.MapBefore(func(c context.Context) error {	
+		r := c.HttpRequest()
+		log.Printf("%v: %v", r.Method, r.URL.Path)
 		authheader := c.HttpRequest().Header["Authorization"]
 		if len(authheader) == 0 {
 			return nil
@@ -26,7 +28,7 @@ func mapRoutes() {
 		auth := strings.SplitN(authheader[0], " ", 2)
 		if len(auth) == 2 && auth[0] == "Basic" {
 			authstr, _ := base64.StdEncoding.DecodeString(auth[1])
-
+ 
 			creds := strings.SplitN(string(authstr), ":", 2)
 			if len(creds) == 2 && len(creds[0]) > 0 && len(creds[1]) > 0 {
 				user, err := findUserById(creds[0])
@@ -118,6 +120,6 @@ func main() {
 	// Set up the API responder
 	mapRoutes()
 
-	log.Println("Listening intently on port", port)
+	log.Println("Listening Carefully on port", port)
 	http.ListenAndServe(":"+port, goweb.DefaultHttpHandler())
 }
