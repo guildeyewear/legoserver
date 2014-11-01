@@ -51,12 +51,12 @@ func (o *ordersController) Create(ctx context.Context) error {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	} else {
 		if err = json.Unmarshal(data, &order); err != nil {
-			user := ctx.Data()["user"].(User)
-			order.UserId = user.Id
-			order.AccountId = user.AccountId
 			log.Printf("Error unmarshalling request body in POST /orders: %v", err)
 			return goweb.API.RespondWithError(ctx, 400, err.Error())
 		}
+		user := ctx.Data()["user"].(User)
+		order.UserId = user.Id
+		order.AccountId = user.AccountId
 		if err = createOrder(&order); err != nil {
 			log.Printf("Error creating order in database in POST /orders: %v", err)
 			return goweb.API.RespondWithError(ctx, 400, err.Error())
