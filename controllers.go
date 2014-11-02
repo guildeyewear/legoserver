@@ -81,12 +81,19 @@ func (o *ordersController) ReadMany(ctx context.Context) error {
 		if status, err = strconv.ParseInt(orderStatusStr, 0, 0); err != nil {
 			return err
 		}
+	} else {
+		if orders, err := getAllOrders(); err == nil {
+			log.Printf("Got orders, %v", orders)
+			return goweb.API.WriteResponseObject(ctx, 200, orders)
+		} else {
+			return err
+		}
 	}
 
 	if orders, err := getOrders(int(status)); err != nil {
-		return err
-	} else {
 		return goweb.API.WriteResponseObject(ctx, 200, orders)
+	} else {
+		return err
 	}
 }
 
