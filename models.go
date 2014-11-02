@@ -15,13 +15,15 @@ var (
 	databaseName = "guild"
 )
 
+// User account bitmask, used for authorization of users
+// for various features.
 const (
 	USER_NORMAL = 1 << iota
 	USER_ACCOUNT_ADMIN
 	USER_SYSTEM_ADMIN
 )
 
-// Model entities for the GUILD web application.
+// Types related to users and accounts
 type (
 	// Address is a physical address. It is not a collection in the
 	// mongodb database, but is an embedded document within people and
@@ -96,7 +98,54 @@ type (
 		Created   time.Time     `bson:"created" json:"-"`
 		Updated   time.Time     `bson:"updated" json:"updated"`
 	}
+)
 
+// Account objects
+func findAccountById(id string) (a Account, err error) {
+	log.Printf("Looking for account with id %v", id)
+	withCollection("accounts", func(c *mgo.Collection) {
+		err = c.FindId(id).One(&a)
+	})
+	return
+}
+
+func createAccount(acct *Account) (err error) {
+	acct.Id = bson.NewObjectId()
+	withCollection("accounts", func(c *mgo.Collection) {
+		err = c.Insert(acct)
+	})
+	return
+}
+
+// User objects
+func findUserById(id string) (u User, err error) {
+	withCollection("users", func(c *mgo.Collection) {
+		err = c.FindId(id).One(&u)
+	})
+	return
+}
+
+func (u *User) validatePassword(password string) bool {
+	log.Printf("Validating password %v", password)
+	saltedpw := (u.PwSalt + password)
+	hash := sha512.New()
+	hash.Write([]byte(saltedpw))
+	if hex.EncodeToString(hash.Sum(nil)) == u.PwHash {
+		return true
+	}
+	return false
+}
+
+func createUser(user *User) (err error) {
+	log.Printf("Trying to create user %v", user)
+	withCollection("users", func(c *mgo.Collection) {
+		err = c.Insert(user)
+	})
+	return
+}
+
+// Types related to eyewear frame designs
+type (
 	// Engraving describes any special patterns that might be on a
 	// design.  It has an array of paths, which are each an array
 	// of XY coordinates (with the coordinates in 1/100 mm.)
@@ -171,35 +220,6 @@ type (
 		Stock                  int32         `bson:"stock" json:"stock"`
 		PhotoUrls              []string      `bson:"photo_urls,omitempty" json:"photo_urls,omitempty"`
 	}
-
-	// Order instantiates a design into a concrete frame for a customer. It contains
-	// references to the account, the user who entered the order, information about the customer,
-	// and various customizations to the design.
-	Order struct {
-		Id              bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
-		AccountId       bson.ObjectId `bson:"account_id" json:"account_id"`
-		CustomerInfo    PersonInfo    `bson:"customer_info" json:"customer_info"`
-		UserId          string        `bson:"user_id" json:"user_id"`
-		FrontMaterial   bson.ObjectId `bson:"front_material_id" json:"front_material_id"`
-		TempleMaterial  bson.ObjectId `bson:"temple_material_id" json:"temple_material_id"`
-		Scale           float32       `bson:"scale" json:"scale"`
-		YPosition       int16         `bson:"y_position" json:"y_position"`
-		LeftTempleText  string        `bson:"left_temple_text" json:"left_temple_text"`
-		RightTempleText string        `bson:"right_temple_text" json:"right_temple_text"`
-	}
-
-	Invoice struct {
-		Id          bson.ObjectId `bson:"_id,omitempty" json:"-"`
-		AccountId   bson.ObjectId `bson:"account_id" json:"account_id"`
-		Issued      time.Time     `bson:"issued" json:"issued"`
-		Status      string        `bson:"status" json:"status"`
-		Amount      int32         `bson:"amount" json:"amount"`
-		Tax         int32         `bson:"tax" json:"tax"`
-		AmountPaid  int32         `bson:"amount_paid" json:"amount_paid"`
-		PaymentDate time.Time     `bson:"payment_date" json:"payment_date"`
-		Due         time.Time     `bson:"due" json:"due"`
-		Orders      []Order       `bson:"orders" json:"orders"`
-	}
 )
 
 // Materials objects
@@ -233,67 +253,6 @@ func createMaterial(mat *Material) (err error) {
 	return
 }
 
-// Orders
-func createOrder(order *Order) (err error) {
-	order.Id = bson.NewObjectId()
-	log.Printf("Created order id: %v", order.Id)
-	withCollection("orders", func(c *mgo.Collection) {
-		err = c.Insert(order)
-	})
-	return
-}
-
-func findOrderById(id string) (o Order, err error) {
-	withCollection("orders", func(c *mgo.Collection) {
-		err = c.FindId(bson.ObjectIdHex(id)).One(&o)
-	})
-	return
-}
-
-// Account objects
-func findAccountById(id string) (a Account, err error) {
-	log.Printf("Looking for account with id %v", id)
-	withCollection("accounts", func(c *mgo.Collection) {
-		err = c.FindId(id).One(&a)
-	})
-	return
-}
-
-func createAccount(acct *Account) (err error) {
-	acct.Id = bson.NewObjectId()
-	withCollection("accounts", func(c *mgo.Collection) {
-		err = c.Insert(acct)
-	})
-	return
-}
-
-// User objects
-func findUserById(id string) (u User, err error) {
-	withCollection("users", func(c *mgo.Collection) {
-		err = c.FindId(id).One(&u)
-	})
-	return
-}
-
-func (u *User) validatePassword(password string) bool {
-	log.Printf("Validating password %v", password)
-	saltedpw := (u.PwSalt + password)
-	hash := sha512.New()
-	hash.Write([]byte(saltedpw))
-	if hex.EncodeToString(hash.Sum(nil)) == u.PwHash {
-		return true
-	}
-	return false
-}
-
-func createUser(user *User) (err error) {
-	log.Printf("Trying to create user %v", user)
-	withCollection("users", func(c *mgo.Collection) {
-		err = c.Insert(user)
-	})
-	return
-}
-
 func insertDesign(design *Design) (err error) {
 	log.Printf("Trying to insert design %v", design)
 	withCollection("designs", func(c *mgo.Collection) {
@@ -314,6 +273,66 @@ func getDesignsWithCollection(collection string) (designs []Design, err error) {
 	log.Printf("Getting designs inside collection %v", collection)
 	withCollection("designs", func(c *mgo.Collection) {
 		err = c.Find(bson.M{"collections": collection}).All(&designs)
+	})
+	return
+}
+
+// Order status constants
+const (
+	ORDER_NEW            = iota
+	ORDER_IN_MANUFACTURE // Manufacture has begun
+	ORDER_IN_FINISHING   // In the tumblers
+	ORDER_IN_PACKAGING   // Manufacturing complete, being packaged
+	ORDER_IN_SHIPPING    // Waiting to ship
+	ORDER_SHIPPED        // Sent to customer
+	ORDER_CANCELLED
+)
+
+// Types related to orders, invoices and accounting
+type (
+	// Order instantiates a design into a concrete frame for a customer. It contains
+	// references to the account, the user who entered the order, information about the customer,
+	// and various customizations to the design.
+	Order struct {
+		Id              bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
+		AccountId       bson.ObjectId `bson:"account_id" json:"account_id"`
+		CustomerInfo    PersonInfo    `bson:"customer_info" json:"customer_info"`
+		UserId          string        `bson:"user_id" json:"user_id"`
+		FrontMaterial   bson.ObjectId `bson:"front_material_id" json:"front_material_id"`
+		TempleMaterial  bson.ObjectId `bson:"temple_material_id" json:"temple_material_id"`
+		Scale           float32       `bson:"scale" json:"scale"`
+		YPosition       int16         `bson:"y_position" json:"y_position"`
+		LeftTempleText  string        `bson:"left_temple_text" json:"left_temple_text"`
+		RightTempleText string        `bson:"right_temple_text" json:"right_temple_text"`
+	}
+
+	Invoice struct {
+		Id          bson.ObjectId `bson:"_id,omitempty" json:"-"`
+		AccountId   bson.ObjectId `bson:"account_id" json:"account_id"`
+		Issued      time.Time     `bson:"issued" json:"issued"`
+		Status      string        `bson:"status" json:"status"`
+		Amount      int32         `bson:"amount" json:"amount"`
+		Tax         int32         `bson:"tax" json:"tax"`
+		AmountPaid  int32         `bson:"amount_paid" json:"amount_paid"`
+		PaymentDate time.Time     `bson:"payment_date" json:"payment_date"`
+		Due         time.Time     `bson:"due" json:"due"`
+		Orders      []Order       `bson:"orders" json:"orders"`
+	}
+)
+
+// Orders
+func createOrder(order *Order) (err error) {
+	order.Id = bson.NewObjectId()
+	log.Printf("Created order id: %v", order.Id)
+	withCollection("orders", func(c *mgo.Collection) {
+		err = c.Insert(order)
+	})
+	return
+}
+
+func findOrderById(id string) (o Order, err error) {
+	withCollection("orders", func(c *mgo.Collection) {
+		err = c.FindId(bson.ObjectIdHex(id)).One(&o)
 	})
 	return
 }
