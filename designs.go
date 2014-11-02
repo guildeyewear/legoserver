@@ -141,6 +141,7 @@ func getDesignRender(ctx context.Context) error {
 	dc := material.TopColor
 	fillColor := color.RGBA{uint8(dc[0]), uint8(dc[1]), uint8(dc[2]), uint8(dc[3])}
 
+
 	// Get the curves for the outer contour
 	bzs := left.convertToBeziers(false, true)
 	bzs_r := right.convertToBeziers(false, true)
@@ -155,6 +156,23 @@ func getDesignRender(ctx context.Context) error {
 	for i := len(bzs_r) - 1; i >= 0; i-- {
 		bez := bzs_r[i]
 		gc.CubicCurveTo(bez[2][0], bez[2][1], bez[1][0], bez[1][1], bez[0][0], bez[0][1])
+	}
+
+	lens_l := des.Front.Lens.scale(10)
+	lens_r := des.Front.Lens.scale(10)
+	for i, pt := range lens_l {
+		lens_l[i] = Point{pt[0] + 1000, pt[1] - miny}
+		lens_r[i] = Point{-1*pt[0] + 1000, pt[1] - miny}
+	}
+	lens_bzr := lens_l.convertToBeziers(true, false)
+	lens_bzr_r := lens_r.convertToBeziers(true, false)
+	gc.MoveTo(lens_bzr[0][0][0], lens_bzr[0][0][1])
+	for _, bez := range lens_bzr {
+		gc.CubicCurveTo(bez[1][0], bez[1][1], bez[2][0], bez[2][1], bez[3][0], bez[3][1])
+	}
+	gc.MoveTo(lens_bzr_r[0][0][0], lens_bzr_r[0][0][1])
+	for _, bez := range lens_bzr_r {
+		gc.CubicCurveTo(bez[1][0], bez[1][1], bez[2][0], bez[2][1], bez[3][0], bez[3][1])
 	}
 	gc.FillStroke()
 
@@ -181,38 +199,6 @@ func getDesignRender(ctx context.Context) error {
 
 	}
 
-	lensColor := color.RGBA{255, 255, 255, 255}
-	gc.SetFillColor(lensColor)
-	gc.SetStrokeColor(lensColor)
-	lens_l := des.Front.Lens.scale(10)
-	lens_r := des.Front.Lens.scale(10)
-	for i, pt := range lens_l {
-		lens_l[i] = Point{pt[0] + 1000, pt[1] - miny}
-		lens_r[i] = Point{-1*pt[0] + 1000, pt[1] - miny}
-	}
-	lens_bzr := lens_l.convertToBeziers(true, false)
-	lens_bzr_r := lens_r.convertToBeziers(true, false)
-	gc.MoveTo(lens_bzr[0][0][0], lens_bzr[0][0][1])
-	for _, bez := range lens_bzr {
-		gc.CubicCurveTo(bez[1][0], bez[1][1], bez[2][0], bez[2][1], bez[3][0], bez[3][1])
-	}
-	gc.FillStroke()
-	gc.MoveTo(lens_bzr_r[0][0][0], lens_bzr_r[0][0][1])
-	for _, bez := range lens_bzr_r {
-		gc.CubicCurveTo(bez[1][0], bez[1][1], bez[2][0], bez[2][1], bez[3][0], bez[3][1])
-	}
-	gc.FillStroke()
-
-	// Convert all white to transparent
-	bounds := im.Bounds()
-	for i := bounds.Min.X; i <= bounds.Max.X; i++ {
-		for j := bounds.Min.Y; j <= bounds.Max.Y; j++ {
-			if im.At(i, j) == lensColor {
-				im.Set(i, j, image.Transparent)
-			}
-		}
-	}
-
 	saveToPngFile(filename, im)
 
 	dinfo := renderResponse{url, 900 - origin, 10}
@@ -220,7 +206,13 @@ func getDesignRender(ctx context.Context) error {
 }
 
 func saveToPngFile(filePath string, m image.Image) {
-	f, err := os.Create("static-files/" + filePath)
+    log.Printf("Envorinment: %v", os.Environ())
+    fileDir := os.Getenv("STATIC_FILES")
+    if len(fileDir) == 0 {
+        fileDir = "./static-files/"
+    }
+    log.Printf("Using static file directory %v", fileDir)
+	f, err := os.Create(fileDir + filePath)
 	if err != nil {
 		log.Println(err)
 		os.Exit(1)
