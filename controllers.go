@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"log"
+	"strconv"
 
 	"github.com/stretchr/goweb"
 	"github.com/stretchr/goweb/context"
@@ -71,6 +72,22 @@ func (o *ordersController) Read(id string, ctx context.Context) error {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
 	return goweb.API.WriteResponseObject(ctx, 200, order)
+}
+
+func (o *ordersController) ReadMany(ctx context.Context) error {
+	var status int64
+	var err error
+	if orderStatusStr := ctx.FormValue("status"); len(orderStatusStr) > 0 {
+		if status, err = strconv.ParseInt(orderStatusStr, 0, 0); err != nil {
+			return err
+		}
+	}
+
+	if orders, err := getOrders(int(status)); err != nil {
+		return err
+	} else {
+		return goweb.API.WriteResponseObject(ctx, 200, orders)
+	}
 }
 
 // Materials controller

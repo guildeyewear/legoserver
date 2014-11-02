@@ -296,6 +296,7 @@ type (
 	Order struct {
 		Id              bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 		AccountId       bson.ObjectId `bson:"account_id" json:"account_id"`
+		Status          int16         `bson:"status" json:"status"`
 		CustomerInfo    PersonInfo    `bson:"customer_info" json:"customer_info"`
 		UserId          string        `bson:"user_id" json:"user_id"`
 		FrontMaterial   bson.ObjectId `bson:"front_material_id" json:"front_material_id"`
@@ -333,6 +334,13 @@ func createOrder(order *Order) (err error) {
 func findOrderById(id string) (o Order, err error) {
 	withCollection("orders", func(c *mgo.Collection) {
 		err = c.FindId(bson.ObjectIdHex(id)).One(&o)
+	})
+	return
+}
+
+func getOrders(stat int) (os []Order, err error) {
+	withCollection("orders", func(c *mgo.Collection) {
+		err = c.Find("{status: stat}").All(&os)
 	})
 	return
 }
