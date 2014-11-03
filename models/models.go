@@ -298,7 +298,7 @@ type (
 		Id              bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 		AccountId       bson.ObjectId `bson:"account_id" json:"account_id"`
 		DesignId        bson.ObjectId `bson:"design_id" json:"design_id"`
-		Status          int16         `bson:"status,omitempty" json:"status,omitempty"`
+		Status          int16         `bson:"status" json:"status"`
 		CustomerInfo    PersonInfo    `bson:"customer_info" json:"customer_info"`
 		UserId          string        `bson:"user_id" json:"user_id"`
 		FrontMaterial   bson.ObjectId `bson:"front_material_id" json:"front_material_id"`
@@ -326,6 +326,7 @@ type (
 // Orders
 func CreateOrder(order *Order) (err error) {
 	order.Id = bson.NewObjectId()
+	order.Status = ORDER_NEW
 	log.Printf("Created order id: %v", order.Id)
 	withCollection("orders", func(c *mgo.Collection) {
 		err = c.Insert(order)
