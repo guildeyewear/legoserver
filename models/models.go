@@ -270,6 +270,13 @@ func FindDesignById(id string) (d Design, err error) {
 	return
 }
 
+func GetAllDesigns() (designs []Design, err error) {
+	withCollection("designs", func(c *mgo.Collection) {
+		err = c.Find(nil).All(&designs)
+	})
+	return
+}
+
 func GetDesignsWithCollection(collection string) (designs []Design, err error) {
 	log.Printf("Getting designs inside collection %v", collection)
 	withCollection("designs", func(c *mgo.Collection) {

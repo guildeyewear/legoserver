@@ -21,6 +21,14 @@ import (
 
 type designController struct{}
 
+func (m *designController) ReadMany(ctx context.Context) error {
+	designs, err := models.GetAllDesigns()
+	if err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	}
+	return goweb.API.RespondWithData(ctx, designs)
+}
+
 func importDesign(ctx context.Context) error {
 	log.Println("Importing design")
 	userdata := ctx.Data()["user"]

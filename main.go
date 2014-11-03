@@ -59,6 +59,7 @@ func mapRoutes() {
 	goweb.MapController("/collections", &collectionsController{})
 	goweb.MapController("/materials", &materialsController{})
 	goweb.MapController("/orders", &ordersController{})
+	goweb.MapController("/designs", &designController{})
 	goweb.Map("/importdesign", importDesign)
 	goweb.Map("/designs/{id}/render", getDesignRender)
 
