@@ -297,6 +297,7 @@ type (
 	Order struct {
 		Id              bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 		AccountId       bson.ObjectId `bson:"account_id" json:"account_id"`
+		DesignId        bson.ObjectId `bson:"design_id" json:"design_id"`
 		Status          int16         `bson:"status,omitempty" json:"status,omitempty"`
 		CustomerInfo    PersonInfo    `bson:"customer_info" json:"customer_info"`
 		UserId          string        `bson:"user_id" json:"user_id"`
