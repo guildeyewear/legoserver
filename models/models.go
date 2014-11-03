@@ -118,6 +118,13 @@ func CreateAccount(acct *Account) (err error) {
 	return
 }
 
+func GetAllAccounts() (accts []Account, err error) {
+	withCollection("accounts", func(c *mgo.Collection) {
+		err = c.Find(nil).All(&accts)
+	})
+	return
+}
+
 // User objects
 func FindUserById(id string) (u User, err error) {
 	withCollection("users", func(c *mgo.Collection) {

@@ -144,6 +144,14 @@ func (a *accountController) Read(id string, ctx context.Context) error {
 	return goweb.API.WriteResponseObject(ctx, 200, user)
 }
 
+func (a *accountController) ReadMany(ctx context.Context) error {
+	accounts, err := models.GetAllAccounts()
+	if err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	}
+	return goweb.API.WriteResponseObject(ctx, 200, accounts)
+}
+
 func (a *accountController) Create(ctx context.Context) error {
 	var acct models.Account
 	data, err := ctx.RequestBody()
