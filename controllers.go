@@ -76,26 +76,22 @@ func (o *ordersController) Read(id string, ctx context.Context) error {
 }
 
 func (o *ordersController) ReadMany(ctx context.Context) error {
-	var status int64
-	var err error
+	var (
+		status int64
+		err    error
+		orders []models.Order
+	)
 	if orderStatusStr := ctx.FormValue("status"); len(orderStatusStr) > 0 {
 		if status, err = strconv.ParseInt(orderStatusStr, 0, 0); err != nil {
 			return err
 		}
-	} else {
-		if orders, err := models.GetAllOrders(); err == nil {
-			log.Printf("Got orders, %v", orders)
-			return goweb.API.WriteResponseObject(ctx, 200, orders)
-		} else {
+		if orders, err = models.GetOrders(int(status)); err != nil {
 			return err
 		}
-	}
-
-	if orders, err := models.GetOrders(int(status)); err != nil {
-		return goweb.API.WriteResponseObject(ctx, 200, orders)
-	} else {
+	} else if orders, err = models.GetAllOrders(); err != nil {
 		return err
 	}
+	return goweb.API.WriteResponseObject(ctx, 200, orders)
 }
 
 // Materials controller
