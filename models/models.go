@@ -75,7 +75,7 @@ type (
 	// discount specific to that collection.
 	// An Account is a MongoDB collection.
 	Account struct {
-		Id          bson.ObjectId    `bson:"_id,omitempty" json:"-"`
+		Id          bson.ObjectId    `bson:"_id" json:"_id"`
 		Name        string           `bson:"name" json:"name"`
 		Locations   []Address        `bson:"locations" json:"locations"`
 		Contact     string           `bson:"contact_id,omitempty" json:"-"`
