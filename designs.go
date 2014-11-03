@@ -26,7 +26,8 @@ func (m *designController) ReadMany(ctx context.Context) error {
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
-	return goweb.API.RespondWithData(ctx, designs)
+//	return goweb.API.RespondWithData(ctx, designs)
+    return goweb.API.WriteResponseObject(ctx, 200, designs)
 }
 
 func importDesign(ctx context.Context) error {
