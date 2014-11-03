@@ -13,6 +13,8 @@ import (
 
 	"code.google.com/p/draw2d/draw2d"
 
+	"github.com/guildeyewear/legoserver/geometry"
+	"github.com/guildeyewear/legoserver/models"
 	"github.com/stretchr/goweb"
 	"github.com/stretchr/goweb/context"
 )
@@ -25,7 +27,7 @@ func importDesign(ctx context.Context) error {
 	if userdata == nil {
 		return goweb.API.RespondWithError(ctx, 401, "Unauthorized")
 	}
-	user := userdata.(User)
+	user := userdata.(models.User)
 
 	// Read the data
 	data, err := ctx.RequestBody()
@@ -40,16 +42,16 @@ func importDesign(ctx context.Context) error {
 	}
 	import_design := old_design.(map[string]interface{})
 
-	design := Design{}
+	design := models.Design{}
 	design.Name = import_design["name"].(string)
 	design.Collections = []string{"Templates"}
 	design.Updated = time.Now()
 	design.Designer = user.Id
 
-	front := Front{}
+	front := models.Front{}
 	o1 := import_design["outercurve"].(map[string]interface{})
 	o2 := o1["points"].([]interface{})
-	front.Outercurve = make(BSpline, len(o2))
+	front.Outercurve = make(geometry.BSpline, len(o2))
 	for i, pt1 := range o2 {
 		pt := pt1.(map[string]interface{})
 		front.Outercurve[i] = [2]float64{pt["x"].(float64), pt["y"].(float64)}
@@ -57,17 +59,17 @@ func importDesign(ctx context.Context) error {
 
 	lens := import_design["eyehole"].(map[string]interface{})
 	lenspts := lens["points"].([]interface{})
-	front.Lens = make(BSpline, len(lenspts))
+	front.Lens = make(geometry.BSpline, len(lenspts))
 	for i, ptI := range lenspts {
 		pt := ptI.(map[string]interface{})
 		front.Lens[i] = [2]float64{pt["x"].(float64), pt["y"].(float64)}
 	}
 	design.Front = front
 
-	temple := Temple{}
+	temple := models.Temple{}
 	templec := import_design["templecurve"].(map[string]interface{})
 	templepts := templec["points"].([]interface{})
-	temple.Contour = make(BSpline, len(templepts))
+	temple.Contour = make(geometry.BSpline, len(templepts))
 	for i, ptI := range templepts {
 		pt := ptI.(map[string]interface{})
 		temple.Contour[i] = [2]float64{pt["x"].(float64), pt["y"].(float64)}
@@ -78,7 +80,7 @@ func importDesign(ctx context.Context) error {
 	temple.TempleHeight = int16(location["y"].(float64) * 100)
 	design.Temple = temple
 
-	if err = insertDesign(&design); err != nil {
+	if err = models.InsertDesign(&design); err != nil {
 		return goweb.API.RespondWithError(ctx, 500, err.Error())
 	}
 
@@ -90,7 +92,7 @@ func getDesignRender(ctx context.Context) error {
 	log.Println("Getting design render")
 	// Load the design
 	designId := ctx.PathParams().Get("id")
-	des, err := findDesignById(designId.Str())
+	des, err := models.FindDesignById(designId.Str())
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
@@ -102,8 +104,8 @@ func getDesignRender(ctx context.Context) error {
 		materialId = matId
 	}
 
-	left := des.Front.Outercurve.scale(10)
-	right := des.Front.Outercurve.scale(10)
+	left := des.Front.Outercurve.Scale(10)
+	right := des.Front.Outercurve.Scale(10)
 	// The Y coordinate of the bottom of the bridge of the glasses, relative to the HRL
 	origin := left[len(left)-1][1]
 
@@ -124,7 +126,7 @@ func getDesignRender(ctx context.Context) error {
 	//		}
 	//	}
 
-	material, err := findMaterialById(materialId)
+	material, err := models.FindMaterialById(materialId)
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
@@ -132,19 +134,18 @@ func getDesignRender(ctx context.Context) error {
 	im := image.NewRGBA(image.Rect(0, 0, 2000, 900))
 
 	// Offset the frame so it just fits on the canvas
-	_, miny := left.minValues()
+	_, miny := left.MinValues()
 	for i, pt := range left {
-		left[i] = Point{pt[0] + 1000, pt[1] - miny}     // Center on graphic
-		right[i] = Point{pt[0]*-1 + 1000, pt[1] - miny} // Center on graphic
+		left[i] = geometry.Point{pt[0] + 1000, pt[1] - miny}     // Center on graphic
+		right[i] = geometry.Point{pt[0]*-1 + 1000, pt[1] - miny} // Center on graphic
 	}
 
 	dc := material.TopColor
 	fillColor := color.RGBA{uint8(dc[0]), uint8(dc[1]), uint8(dc[2]), uint8(dc[3])}
 
-
 	// Get the curves for the outer contour
-	bzs := left.convertToBeziers(false, true)
-	bzs_r := right.convertToBeziers(false, true)
+	bzs := left.ConvertToBeziers(false, true)
+	bzs_r := right.ConvertToBeziers(false, true)
 	gc := draw2d.NewGraphicContext(im)
 	gc.SetFillColor(fillColor)
 	gc.SetStrokeColor(fillColor)
@@ -158,14 +159,14 @@ func getDesignRender(ctx context.Context) error {
 		gc.CubicCurveTo(bez[2][0], bez[2][1], bez[1][0], bez[1][1], bez[0][0], bez[0][1])
 	}
 
-	lens_l := des.Front.Lens.scale(10)
-	lens_r := des.Front.Lens.scale(10)
+	lens_l := des.Front.Lens.Scale(10)
+	lens_r := des.Front.Lens.Scale(10)
 	for i, pt := range lens_l {
-		lens_l[i] = Point{pt[0] + 1000, pt[1] - miny}
-		lens_r[i] = Point{-1*pt[0] + 1000, pt[1] - miny}
+		lens_l[i] = geometry.Point{pt[0] + 1000, pt[1] - miny}
+		lens_r[i] = geometry.Point{-1*pt[0] + 1000, pt[1] - miny}
 	}
-	lens_bzr := lens_l.convertToBeziers(true, false)
-	lens_bzr_r := lens_r.convertToBeziers(true, false)
+	lens_bzr := lens_l.ConvertToBeziers(true, false)
+	lens_bzr_r := lens_r.ConvertToBeziers(true, false)
 	gc.MoveTo(lens_bzr[0][0][0], lens_bzr[0][0][1])
 	for _, bez := range lens_bzr {
 		gc.CubicCurveTo(bez[1][0], bez[1][1], bez[2][0], bez[2][1], bez[3][0], bez[3][1])
@@ -206,12 +207,12 @@ func getDesignRender(ctx context.Context) error {
 }
 
 func saveToPngFile(filePath string, m image.Image) {
-    log.Printf("Envorinment: %v", os.Environ())
-    fileDir := os.Getenv("STATIC_FILES")
-    if len(fileDir) == 0 {
-        fileDir = "./static-files/"
-    }
-    log.Printf("Using static file directory %v", fileDir)
+	log.Printf("Envorinment: %v", os.Environ())
+	fileDir := os.Getenv("STATIC_FILES")
+	if len(fileDir) == 0 {
+		fileDir = "./static-files/"
+	}
+	log.Printf("Using static file directory %v", fileDir)
 	f, err := os.Create(fileDir + filePath)
 	if err != nil {
 		log.Println(err)

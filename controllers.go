@@ -8,6 +8,7 @@ import (
 	"log"
 	"strconv"
 
+	"github.com/guildeyewear/legoserver/models"
 	"github.com/stretchr/goweb"
 	"github.com/stretchr/goweb/context"
 )
@@ -26,16 +27,16 @@ type (
 )
 
 // Authorization
-func requireAuth(requiredUserLevel byte, ctx context.Context) bool {
+func requireAuth(userLevel byte, ctx context.Context) bool {
 	log.Println("Checking if user has authorization")
 	user := ctx.Data()["user"]
-	log.Printf("User is %v", user)
+	log.Printf("geometry.User is %v", user)
 	if user == nil {
 		log.Println("Returning unauthorized")
 		return false
 	}
-	ut := user.(User).Type
-	if ut|requiredUserLevel == 0 {
+	ut := user.(models.User).Type
+	if ut == 0 {
 		return false
 	}
 	return true
@@ -43,10 +44,10 @@ func requireAuth(requiredUserLevel byte, ctx context.Context) bool {
 
 // Orders
 func (o *ordersController) Create(ctx context.Context) error {
-	if !requireAuth(USER_NORMAL, ctx) {
+	if !requireAuth(models.USER_NORMAL, ctx) {
 		return goweb.API.RespondWithError(ctx, 401, "Unauthorized")
 	}
-	var order Order
+	var order models.Order
 	if data, err := ctx.RequestBody(); err != nil {
 		log.Printf("Error getting request body in POST /orders: %v", err)
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
@@ -55,10 +56,10 @@ func (o *ordersController) Create(ctx context.Context) error {
 			log.Printf("Error unmarshalling request body in POST /orders: %v", err)
 			return goweb.API.RespondWithError(ctx, 400, err.Error())
 		}
-		user := ctx.Data()["user"].(User)
+		user := ctx.Data()["user"].(models.User)
 		order.UserId = user.Id
 		order.AccountId = user.AccountId
-		if err = createOrder(&order); err != nil {
+		if err = models.CreateOrder(&order); err != nil {
 			log.Printf("Error creating order in database in POST /orders: %v", err)
 			return goweb.API.RespondWithError(ctx, 400, err.Error())
 		}
@@ -67,7 +68,7 @@ func (o *ordersController) Create(ctx context.Context) error {
 }
 
 func (o *ordersController) Read(id string, ctx context.Context) error {
-	order, err := findOrderById(id)
+	order, err := models.FindOrderById(id)
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
@@ -82,7 +83,7 @@ func (o *ordersController) ReadMany(ctx context.Context) error {
 			return err
 		}
 	} else {
-		if orders, err := getAllOrders(); err == nil {
+		if orders, err := models.GetAllOrders(); err == nil {
 			log.Printf("Got orders, %v", orders)
 			return goweb.API.WriteResponseObject(ctx, 200, orders)
 		} else {
@@ -90,7 +91,7 @@ func (o *ordersController) ReadMany(ctx context.Context) error {
 		}
 	}
 
-	if orders, err := getOrders(int(status)); err != nil {
+	if orders, err := models.GetOrders(int(status)); err != nil {
 		return goweb.API.WriteResponseObject(ctx, 200, orders)
 	} else {
 		return err
@@ -100,7 +101,7 @@ func (o *ordersController) ReadMany(ctx context.Context) error {
 // Materials controller
 
 func (m *materialsController) Read(id string, ctx context.Context) error {
-	mat, err := findMaterialById(id)
+	mat, err := models.FindMaterialById(id)
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
@@ -108,11 +109,11 @@ func (m *materialsController) Read(id string, ctx context.Context) error {
 	return goweb.API.WriteResponseObject(ctx, 200, mat)
 }
 func (m *materialsController) Create(ctx context.Context) error {
-	if !requireAuth(USER_SYSTEM_ADMIN, ctx) {
+	if !requireAuth(models.USER_SYSTEM_ADMIN, ctx) {
 		return goweb.API.RespondWithError(ctx, 401, "Unauthorized")
 	}
 
-	var mat Material
+	var mat models.Material
 	data, err := ctx.RequestBody()
 
 	if err != nil {
@@ -123,7 +124,7 @@ func (m *materialsController) Create(ctx context.Context) error {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
 
-	if err := createMaterial(&mat); err != nil {
+	if err := models.CreateMaterial(&mat); err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
 	return goweb.API.WriteResponseObject(ctx, 201, mat)
@@ -131,7 +132,7 @@ func (m *materialsController) Create(ctx context.Context) error {
 
 func (m *materialsController) ReadMany(ctx context.Context) error {
 	log.Println("Getting all materials")
-	materials, err := getAllMaterials()
+	materials, err := models.GetAllMaterials()
 	log.Printf("Materials %v", materials)
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
@@ -148,7 +149,7 @@ func (a *accountController) Read(id string, ctx context.Context) error {
 }
 
 func (a *accountController) Create(ctx context.Context) error {
-	var acct Account
+	var acct models.Account
 	data, err := ctx.RequestBody()
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
@@ -158,13 +159,13 @@ func (a *accountController) Create(ctx context.Context) error {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
 
-	if err := createAccount(&acct); err != nil {
+	if err := models.CreateAccount(&acct); err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
 	return goweb.API.WriteResponseObject(ctx, 201, acct)
 }
 
-// User controller functions
+// geometry.User controller functions
 func (u *userController) Read(id string, ctx context.Context) error {
 	log.Println("Getting user")
 	// Get the authenticated user
@@ -172,24 +173,24 @@ func (u *userController) Read(id string, ctx context.Context) error {
 	if userdata == nil {
 		return goweb.API.RespondWithError(ctx, 401, "Unauthorized")
 	}
-	loggedin_user := userdata.(User)
+	loggedin_user := userdata.(models.User)
 
-	var requested_user User
+	var requested_user models.User
 	var err error
 
 	switch loggedin_user.Type {
-	case USER_NORMAL:
+	case models.USER_NORMAL:
 		if loggedin_user.Id == id {
 			requested_user = loggedin_user
 		} else {
 			return goweb.API.RespondWithError(ctx, 401, "Unauthorized")
 		}
-	case USER_SYSTEM_ADMIN:
-		if requested_user, err = findUserById(id); err != nil {
+	case models.USER_SYSTEM_ADMIN:
+		if requested_user, err = models.FindUserById(id); err != nil {
 			return goweb.API.RespondWithError(ctx, 500, err.Error())
 		}
-	case USER_ACCOUNT_ADMIN:
-		if requested_user, err = findUserById(id); err != nil {
+	case models.USER_ACCOUNT_ADMIN:
+		if requested_user, err = models.FindUserById(id); err != nil {
 			return goweb.API.RespondWithError(ctx, 500, err.Error())
 		}
 		if requested_user.AccountId != loggedin_user.AccountId {
@@ -201,7 +202,7 @@ func (u *userController) Read(id string, ctx context.Context) error {
 }
 
 func (u *userController) Create(ctx context.Context) error {
-	var user User
+	var user models.User
 	userInfo := ctx.FormParams()
 	if len(userInfo) > 0 {
 		if userInfo["id"] != nil {
@@ -226,7 +227,7 @@ func (u *userController) Create(ctx context.Context) error {
 	if len(user.Id) == 0 || len(user.Password) == 0 {
 		return goweb.API.RespondWithError(ctx, 400, "email and password required")
 	}
-	_, err := findUserById(user.Id)
+	_, err := models.FindUserById(user.Id)
 	if err == nil {
 		return goweb.API.RespondWithError(ctx, 409, "user already exists")
 	}
@@ -243,7 +244,7 @@ func (u *userController) Create(ctx context.Context) error {
 	hash.Write([]byte(saltedpassword))
 	user.PwHash = hex.EncodeToString(hash.Sum(nil))
 
-	if err := createUser(&user); err != nil {
+	if err := models.CreateUser(&user); err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
 

@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/guildeyewear/legoserver/models"
 	"github.com/stretchr/goweb"
 	"github.com/stretchr/goweb/context"
 	"gopkg.in/mgo.v2"
@@ -18,7 +19,7 @@ import (
 // endpoints to function handlers.  It's put into a
 // distinct function so that it can be called from test code.
 func mapRoutes() {
-	goweb.MapBefore(func(c context.Context) error {	
+	goweb.MapBefore(func(c context.Context) error {
 		r := c.HttpRequest()
 		log.Printf("%v: %v", r.Method, r.URL.Path)
 		authheader := c.HttpRequest().Header["Authorization"]
@@ -28,13 +29,13 @@ func mapRoutes() {
 		auth := strings.SplitN(authheader[0], " ", 2)
 		if len(auth) == 2 && auth[0] == "Basic" {
 			authstr, _ := base64.StdEncoding.DecodeString(auth[1])
- 
+
 			creds := strings.SplitN(string(authstr), ":", 2)
 			if len(creds) == 2 && len(creds[0]) > 0 && len(creds[1]) > 0 {
-				user, err := findUserById(creds[0])
+				user, err := models.FindUserById(creds[0])
 				if err != nil {
 					return goweb.API.RespondWithError(c, 500, err.Error())
-				} else if user.validatePassword(creds[1]) {
+				} else if user.ValidatePassword(creds[1]) {
 					c.Data()["user"] = user
 				}
 			}

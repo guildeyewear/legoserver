@@ -1,4 +1,4 @@
-package main
+package models
 
 import (
 	"crypto/sha512"
@@ -6,6 +6,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/guildeyewear/legoserver/geometry"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -101,7 +102,7 @@ type (
 )
 
 // Account objects
-func findAccountById(id string) (a Account, err error) {
+func FindAccountById(id string) (a Account, err error) {
 	log.Printf("Looking for account with id %v", id)
 	withCollection("accounts", func(c *mgo.Collection) {
 		err = c.FindId(id).One(&a)
@@ -109,7 +110,7 @@ func findAccountById(id string) (a Account, err error) {
 	return
 }
 
-func createAccount(acct *Account) (err error) {
+func CreateAccount(acct *Account) (err error) {
 	acct.Id = bson.NewObjectId()
 	withCollection("accounts", func(c *mgo.Collection) {
 		err = c.Insert(acct)
@@ -118,14 +119,14 @@ func createAccount(acct *Account) (err error) {
 }
 
 // User objects
-func findUserById(id string) (u User, err error) {
+func FindUserById(id string) (u User, err error) {
 	withCollection("users", func(c *mgo.Collection) {
 		err = c.FindId(id).One(&u)
 	})
 	return
 }
 
-func (u *User) validatePassword(password string) bool {
+func (u *User) ValidatePassword(password string) bool {
 	log.Printf("Validating password %v", password)
 	saltedpw := (u.PwSalt + password)
 	hash := sha512.New()
@@ -136,7 +137,7 @@ func (u *User) validatePassword(password string) bool {
 	return false
 }
 
-func createUser(user *User) (err error) {
+func CreateUser(user *User) (err error) {
 	log.Printf("Trying to create user %v", user)
 	withCollection("users", func(c *mgo.Collection) {
 		err = c.Insert(user)
@@ -152,9 +153,9 @@ type (
 	// This is not a MongoDB collection but rather an embedded document
 	// within the Temple and Front documents.
 	Engraving struct {
-		Depth int16     `bson:"depth" json:"depth"`
-		Angle int16     `bson:"cutter_angle" json:"cutter_angle"`
-		Paths []BSpline `bson:"paths" json:"paths"`
+		Depth int16              `bson:"depth" json:"depth"`
+		Angle int16              `bson:"cutter_angle" json:"cutter_angle"`
+		Paths []geometry.BSpline `bson:"paths" json:"paths"`
 	}
 
 	// Temple describes the arms of the glasses.  The assumption is that
@@ -165,13 +166,13 @@ type (
 	// Temple is not a MongoDB collection but rather is an embedded document within
 	// a Design document.
 	Temple struct {
-		Contour          BSpline         `bson:"contour" json:"contour"`
-		Materials        []bson.ObjectId `bson:"materials" json:"materials"`
-		Engraving        Engraving       `bson:"engraving,omitempty" json:"engraving,omitempty"`
-		LeftText         string          `bson:"left_text,omitempty" json:"left_text,omitempty"`
-		RightText        string          `bson:"right_text,omitempty" json:"right_text,omitempty"`
-		TempleSeparation int16           `bson:"temple_separation" json:"temple_separation"`
-		TempleHeight     int16           `bson:"temple_height" json:"temple_height"`
+		Contour          geometry.BSpline `bson:"contour" json:"contour"`
+		Materials        []bson.ObjectId  `bson:"materials" json:"materials"`
+		Engraving        Engraving        `bson:"engraving,omitempty" json:"engraving,omitempty"`
+		LeftText         string           `bson:"left_text,omitempty" json:"left_text,omitempty"`
+		RightText        string           `bson:"right_text,omitempty" json:"right_text,omitempty"`
+		TempleSeparation int16            `bson:"temple_separation" json:"temple_separation"`
+		TempleHeight     int16            `bson:"temple_height" json:"temple_height"`
 	}
 	// Front describes the main front of the glasses.
 	// The Materials refernece the Materials documents
@@ -181,11 +182,11 @@ type (
 	// Front is not a MongoDB collection but rather is an embedded document within
 	// a Design document.
 	Front struct {
-		Outercurve BSpline         `bson:"outer_curve" json:"outer_curve"`
-		Lens       BSpline         `bson:"lens" json:"lens"`
-		Holes      []BSpline       `bson:"holes,omitempty" json:"holes,omitempty"`
-		Engraving  Engraving       `bson:"engraving,omitempty" json:"engraving,omitempty"`
-		Materials  []bson.ObjectId `bson:"materials" json:"materials"`
+		Outercurve geometry.BSpline   `bson:"outer_curve" json:"outer_curve"`
+		Lens       geometry.BSpline   `bson:"lens" json:"lens"`
+		Holes      []geometry.BSpline `bson:"holes,omitempty" json:"holes,omitempty"`
+		Engraving  Engraving          `bson:"engraving,omitempty" json:"engraving,omitempty"`
+		Materials  []bson.ObjectId    `bson:"materials" json:"materials"`
 	}
 
 	// Design describes a complete frame design, including the geometry, size
@@ -223,7 +224,7 @@ type (
 )
 
 // Materials objects
-func findMaterialById(id string) (m Material, err error) {
+func FindMaterialById(id string) (m Material, err error) {
 	log.Printf("Looking for material with id %v", id)
 	withCollection("materials", func(c *mgo.Collection) {
 		err = c.FindId(bson.ObjectIdHex(id)).One(&m)
@@ -231,21 +232,21 @@ func findMaterialById(id string) (m Material, err error) {
 	return
 }
 
-func getAllMaterials() (materials []Material, err error) {
+func GetAllMaterials() (materials []Material, err error) {
 	withCollection("materials", func(c *mgo.Collection) {
 		err = c.Find(nil).All(&materials)
 	})
 	return
 }
 
-func updateMaterial(mat Material) (err error) {
+func UpdateMaterial(mat Material) (err error) {
 	withCollection("materials", func(c *mgo.Collection) {
 		err = c.UpdateId(mat.Id, mat)
 	})
 	return
 }
 
-func createMaterial(mat *Material) (err error) {
+func CreateMaterial(mat *Material) (err error) {
 	mat.Id = bson.NewObjectId()
 	withCollection("materials", func(c *mgo.Collection) {
 		err = c.Insert(mat)
@@ -253,7 +254,7 @@ func createMaterial(mat *Material) (err error) {
 	return
 }
 
-func insertDesign(design *Design) (err error) {
+func InsertDesign(design *Design) (err error) {
 	log.Printf("Trying to insert design %v", design)
 	withCollection("designs", func(c *mgo.Collection) {
 		err = c.Insert(design)
@@ -261,7 +262,7 @@ func insertDesign(design *Design) (err error) {
 	return
 }
 
-func findDesignById(id string) (d Design, err error) {
+func FindDesignById(id string) (d Design, err error) {
 	log.Printf("Looking for design with id %v", id)
 	withCollection("designs", func(c *mgo.Collection) {
 		err = c.FindId(bson.ObjectIdHex(id)).One(&d)
@@ -269,7 +270,7 @@ func findDesignById(id string) (d Design, err error) {
 	return
 }
 
-func getDesignsWithCollection(collection string) (designs []Design, err error) {
+func GetDesignsWithCollection(collection string) (designs []Design, err error) {
 	log.Printf("Getting designs inside collection %v", collection)
 	withCollection("designs", func(c *mgo.Collection) {
 		err = c.Find(bson.M{"collections": collection}).All(&designs)
@@ -322,7 +323,7 @@ type (
 )
 
 // Orders
-func createOrder(order *Order) (err error) {
+func CreateOrder(order *Order) (err error) {
 	order.Id = bson.NewObjectId()
 	log.Printf("Created order id: %v", order.Id)
 	withCollection("orders", func(c *mgo.Collection) {
@@ -331,21 +332,21 @@ func createOrder(order *Order) (err error) {
 	return
 }
 
-func findOrderById(id string) (o Order, err error) {
+func FindOrderById(id string) (o Order, err error) {
 	withCollection("orders", func(c *mgo.Collection) {
 		err = c.FindId(bson.ObjectIdHex(id)).One(&o)
 	})
 	return
 }
 
-func getOrders(stat int) (os []Order, err error) {
+func GetOrders(stat int) (os []Order, err error) {
 	withCollection("orders", func(c *mgo.Collection) {
 		err = c.Find(bson.M{"status": stat}).All(&os)
 	})
 	return
 }
 
-func getAllOrders() (os []Order, err error) {
+func GetAllOrders() (os []Order, err error) {
 	log.Println("Getting all orders")
 	withCollection("orders", func(c *mgo.Collection) {
 		err = c.Find(nil).All(&os)
