@@ -169,9 +169,10 @@ func (a *accountController) Create(ctx context.Context) error {
 	return goweb.API.WriteResponseObject(ctx, 201, acct)
 }
 
-func accountUsers(id string, ctx context.Context) error {
+func accountUsers(ctx context.Context) error {
+	id := ctx.PathParams().Get("id")
 	log.Printf("Getting users for account %v", id)
-	users, err := models.FindUsersbyAccount(id)
+	users, err := models.FindUsersbyAccount(id.Str())
 
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
