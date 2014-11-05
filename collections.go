@@ -13,7 +13,7 @@ type collectionsController struct{}
 func (c *collectionsController) ReadMany(ctx context.Context) error {
 	templates := []string{"Templates"}
 	log.Println("Returning array")
-	return goweb.API.RespondWithData(ctx, templates)
+	return goweb.API.WriteResponseObject(ctx, 200, templates)
 }
 
 func (c *collectionsController) Read(collection string, ctx context.Context) error {
@@ -22,5 +22,5 @@ func (c *collectionsController) Read(collection string, ctx context.Context) err
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
-	return goweb.API.RespondWithData(ctx, designs)
+	return goweb.API.WriteResponseObject(ctx, 200, designs)
 }

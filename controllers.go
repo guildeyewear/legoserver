@@ -133,7 +133,7 @@ func (m *materialsController) ReadMany(ctx context.Context) error {
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
-	return goweb.API.RespondWithData(ctx, materials)
+	return goweb.API.WriteResponseObject(ctx, 200, materials)
 }
 
 // Account controller functions
@@ -202,7 +202,7 @@ func (u *userController) Read(id string, ctx context.Context) error {
 		}
 	}
 
-	return goweb.API.RespondWithData(ctx, requested_user)
+	return goweb.API.WriteResponseObject(ctx, 200, requested_user)
 }
 
 func (u *userController) Create(ctx context.Context) error {

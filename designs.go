@@ -13,7 +13,7 @@ import (
 
 	"code.google.com/p/draw2d/draw2d"
 
-	"github.com/guildeyewear/legoserver/geometry"
+	"github.com/guildeyewear/geometry"
 	"github.com/guildeyewear/legoserver/models"
 	"github.com/stretchr/goweb"
 	"github.com/stretchr/goweb/context"
@@ -26,8 +26,8 @@ func (m *designController) ReadMany(ctx context.Context) error {
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
-//	return goweb.API.RespondWithData(ctx, designs)
-    return goweb.API.WriteResponseObject(ctx, 200, designs)
+	//	return goweb.API.RespondWithData(ctx, designs)
+	return goweb.API.WriteResponseObject(ctx, 200, designs)
 }
 
 func importDesign(ctx context.Context) error {
@@ -212,7 +212,7 @@ func getDesignRender(ctx context.Context) error {
 	saveToPngFile(filename, im)
 
 	dinfo := renderResponse{url, 900 - origin, 10}
-	return goweb.API.RespondWithData(ctx, dinfo)
+	return goweb.API.WriteResponseObject(ctx, 200, dinfo)
 }
 
 func saveToPngFile(filePath string, m image.Image) {
