@@ -135,7 +135,7 @@ func FindUserById(id string) (u User, err error) {
 
 func FindUsersbyAccount(id string) (users []User, err error) {
 	withCollection("users", func(c *mgo.Collection) {
-		err = c.Find(bson.M{"account_id": bson.ObjectId(id)}).All(&users)
+		err = c.Find(bson.M{"account_id": bson.ObjectIdHex(id)}).All(&users)
 	})
 	return
 }
