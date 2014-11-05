@@ -169,7 +169,16 @@ func (a *accountController) Create(ctx context.Context) error {
 	return goweb.API.WriteResponseObject(ctx, 201, acct)
 }
 
-// geometry.User controller functions
+func accountUsers(id string, ctx context.Context) error {
+	log.Printf("Getting users for account %v", id)
+	users, err := models.FindUsersbyAccount(id)
+
+	if err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	}
+	return goweb.API.WriteResponseObject(ctx, 200, users)
+}
+
 func (u *userController) Read(id string, ctx context.Context) error {
 	log.Println("Getting user")
 	// Get the authenticated user

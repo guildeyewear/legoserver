@@ -19,6 +19,10 @@ import (
 // endpoints to function handlers.  It's put into a
 // distinct function so that it can be called from test code.
 func mapRoutes() {
+	//var securePaths = map[string]byte{
+	//		"GET: /accounts/*/users": models.USER_NORMAL,
+	//	}
+
 	goweb.MapBefore(func(c context.Context) error {
 		r := c.HttpRequest()
 		log.Printf("%v: %v", r.Method, r.URL.Path)
@@ -41,6 +45,7 @@ func mapRoutes() {
 			}
 			return nil
 		}
+
 		// Do authentication
 		return nil
 	})
@@ -60,6 +65,7 @@ func mapRoutes() {
 	goweb.MapController("/materials", &materialsController{})
 	goweb.MapController("/orders", &ordersController{})
 	goweb.MapController("/designs", &designController{})
+	goweb.Map("/accounts/{id}/users", accountUsers)
 	goweb.Map("/importdesign", importDesign)
 	goweb.Map("/designs/{id}/render", getDesignRender)
 

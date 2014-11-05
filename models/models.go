@@ -133,6 +133,13 @@ func FindUserById(id string) (u User, err error) {
 	return
 }
 
+func FindUsersbyAccount(id string) (users []User, err error) {
+	withCollection("users", func(c *mgo.Collection) {
+		err = c.Find(bson.M{"account_id": id}).All(&users)
+	})
+	return
+}
+
 func (u *User) ValidatePassword(password string) bool {
 	log.Printf("Validating password %v", password)
 	saltedpw := (u.PwSalt + password)
