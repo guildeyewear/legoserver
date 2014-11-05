@@ -6,7 +6,7 @@ import (
 	"log"
 	"time"
 
-	"github.com/guildeyewear/legoserver/geometry"
+	"github.com/guildeyewear/geometry"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
@@ -312,7 +312,7 @@ type (
 		Id              bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 		AccountId       bson.ObjectId `bson:"account_id" json:"account_id"`
 		DesignId        bson.ObjectId `bson:"design_id" json:"design_id"`
-        CreatedDate     time.Time      `bson:"created_at" json:"created_at"`
+		CreatedDate     time.Time     `bson:"created_at" json:"created_at"`
 		Status          int16         `bson:"status" json:"status"`
 		CustomerInfo    PersonInfo    `bson:"customer_info" json:"customer_info"`
 		UserId          string        `bson:"user_id" json:"user_id"`
@@ -342,7 +342,7 @@ type (
 func CreateOrder(order *Order) (err error) {
 	order.Id = bson.NewObjectId()
 	order.Status = ORDER_NEW
-    order.CreatedDate = time.Now()
+	order.CreatedDate = time.Now()
 	log.Printf("Created order id: %v", order.Id)
 	withCollection("orders", func(c *mgo.Collection) {
 		err = c.Insert(order)
