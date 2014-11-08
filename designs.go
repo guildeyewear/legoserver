@@ -53,7 +53,7 @@ func importDesign(ctx context.Context) error {
 
 	design := models.Design{}
 	design.Name = import_design["name"].(string)
-	design.Collections = []string{"Templates"}
+	design.Collections = []string{import_design["collection"].(string)}
 	design.Updated = time.Now()
 	//	design.Designer = user.Id
 	design.Designer = import_design["owner"].(string)
