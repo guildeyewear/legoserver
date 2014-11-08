@@ -325,7 +325,7 @@ type (
 		UserId          string        `bson:"user_id" json:"user_id"`
 		FrontMaterial   bson.ObjectId `bson:"front_material_id" json:"front_material_id"`
 		TempleMaterial  bson.ObjectId `bson:"temple_material_id" json:"temple_material_id"`
-		Scale           float32       `bson:"scale" json:"scale"`
+		Scale           float64       `bson:"scale" json:"scale"`
 		YPosition       int16         `bson:"y_position" json:"y_position"`
 		LeftTempleText  string        `bson:"left_temple_text" json:"left_temple_text"`
 		RightTempleText string        `bson:"right_temple_text" json:"right_temple_text"`

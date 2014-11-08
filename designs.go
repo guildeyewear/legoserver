@@ -32,11 +32,11 @@ func (m *designController) ReadMany(ctx context.Context) error {
 
 func importDesign(ctx context.Context) error {
 	log.Println("Importing design")
-	userdata := ctx.Data()["user"]
-	if userdata == nil {
-		return goweb.API.RespondWithError(ctx, 401, "Unauthorized")
-	}
-	user := userdata.(models.User)
+	//userdata := ctx.Data()["user"]
+	//if userdata == nil {
+	//		return goweb.API.RespondWithError(ctx, 401, "Unauthorized")
+	//	}
+	//	user := userdata.(models.User)
 
 	// Read the data
 	data, err := ctx.RequestBody()
@@ -55,8 +55,8 @@ func importDesign(ctx context.Context) error {
 	design.Name = import_design["name"].(string)
 	design.Collections = []string{"Templates"}
 	design.Updated = time.Now()
-	design.Designer = user.Id
-
+	//	design.Designer = user.Id
+	design.Designer = import_design["owner"].(string)
 	front := models.Front{}
 	o1 := import_design["outercurve"].(map[string]interface{})
 	o2 := o1["points"].([]interface{})
