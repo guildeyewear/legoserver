@@ -11,7 +11,7 @@ import (
 type collectionsController struct{}
 
 func (c *collectionsController) ReadMany(ctx context.Context) error {
-	templates := []string{"Templates"}
+	templates := []string{"Toronto Collection", "GUILD Everyday"}
 	log.Println("Returning array")
 	return goweb.API.WriteResponseObject(ctx, 200, templates)
 }
