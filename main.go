@@ -64,11 +64,12 @@ func mapRoutes() {
 	goweb.MapController("/collections", &collectionsController{})
 	goweb.MapController("/materials", &materialsController{})
 	goweb.MapController("/orders", &ordersController{})
-	goweb.MapController("/designs", &designController{})
+	//	goweb.MapController("/designs", &designController{})
 
 	goweb.Map("/accounts/{id}/users", accountUsers)
 	goweb.Map("/importdesign", importDesign)
 	goweb.Map("/designs/{id}/render", getDesignRender)
+	goweb.Map("/designs", getCollectionDesigns)
 
 	// Map status code responses for testing
 	goweb.Map("/status-code/{code}", func(c context.Context) error {
