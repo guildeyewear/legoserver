@@ -31,8 +31,15 @@ func (m *designController) ReadMany(ctx context.Context) error {
 }
 
 func getCollectionDesigns(ctx context.Context) error {
-	collection := ctx.PathParams().Get("collection")
-	designs, err := models.GetDesignsWithCollection(collection.Str())
+	collection := ctx.QueryValue("collection")
+    log.Println("Collection is ", collection)
+    var designs []models.Design
+    var err error
+    if len(collection) == 0 {
+        designs, err = models.GetAllDesigns()
+    } else {
+        designs, err = models.GetDesignsWithCollection(collection)
+    }
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
