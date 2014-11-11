@@ -94,6 +94,25 @@ func (o *ordersController) ReadMany(ctx context.Context) error {
 	return goweb.API.WriteResponseObject(ctx, 200, orders)
 }
 
+func (o *ordersController) Update(id string, ctx context.Context) error {
+    status := ctx.FormValue("status")
+    if len(status) == 0 {
+        return goweb.Respond.WithStatus(ctx, 304)
+    }
+
+    stat_i, err := strconv.ParseInt(status, 10, 64)
+    if err != nil {
+        return goweb.API.RespondWithError(ctx, 500, err.Error())
+    }
+    err = models.UpdateOrderStatus(id, int(stat_i))
+    if err != nil {
+        return goweb.API.RespondWithError(ctx, 500, err.Error())
+    }
+    return goweb.Respond.WithStatus(ctx, 200)
+
+}
+
+
 // Materials controller
 
 func (m *materialsController) Read(id string, ctx context.Context) error {

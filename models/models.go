@@ -379,6 +379,13 @@ func GetAllOrders() (os []Order, err error) {
 	return
 }
 
+func UpdateOrderStatus(id string, status int) (err error) {
+    withCollection("orders", func(c *mgo.Collection) {
+        err = c.UpdateId(bson.ObjectIdHex(id), bson.M{"$set": bson.M{"status": 1}})
+    })
+    return
+}
+
 // Utility function for managing Mongodb sessions
 func getMongoSession() *mgo.Session {
 	if mgoSession == nil {
