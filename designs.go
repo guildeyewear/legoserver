@@ -132,14 +132,12 @@ func getDesignRender(ctx context.Context) error {
 
 	left := des.Front.Outercurve.Scale(10)
 	right := des.Front.Outercurve.Scale(10)
-	// The Y coordinate of the bottom of the bridge of the glasses, relative to the HRL
-	origin := left[len(left)-1][1]
 
 	filename := fmt.Sprintf("%v-%v.png", designId.Str(), materialId)
 	url := fmt.Sprintf("http://%v/static/%v", ctx.HttpRequest().Host, filename)
 	type renderResponse struct {
 		Url           string  `json:"url"`
-		Y_offset      float64 `json:"y_offset"`
+		YOrigin      float64 `json:"y_origin"`
 		PixelsDensity int16   `json:"pixels_per_mm"`
 	}
 	//	fstat, err := os.Stat(fmt.Sprintf("./static-files/%v", filename))
@@ -158,13 +156,14 @@ func getDesignRender(ctx context.Context) error {
 	}
 	// PNG image.  Dimensions by convention, correspond to 1mm : 10px
 	im := image.NewRGBA(image.Rect(0, 0, 2000, 900))
-
-	// Offset the frame so it just fits on the canvas
+//
+//	// Offset the frame so it just fits on the canvas
 	_, miny := left.MinValues()
 	for i, pt := range left {
 		left[i] = geometry.Point{pt[0] + 1000, pt[1] - miny}     // Center on graphic
 		right[i] = geometry.Point{pt[0]*-1 + 1000, pt[1] - miny} // Center on graphic
 	}
+    log.Printf("Left endpoints: %v, %v", left[0], left[len(left)-1])
 
 	dc := material.TopColor
 	fillColor := color.RGBA{uint8(dc[0]), uint8(dc[1]), uint8(dc[2]), uint8(dc[3])}
@@ -228,7 +227,7 @@ func getDesignRender(ctx context.Context) error {
 
 	saveToPngFile(filename, im)
 
-	dinfo := renderResponse{url, 900 - origin, 10}
+	dinfo := renderResponse{url, miny/-10.0, 10}
 	return goweb.API.WriteResponseObject(ctx, 200, dinfo)
 }
 
