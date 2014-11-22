@@ -225,10 +225,13 @@ type (
 		Id                     bson.ObjectId `bson:"_id" json:"id"`
 		Name                   string        `bson:"name" json:"name"`
 		TopThickness           float32       `bson:"top_thickness" json:"top_thickness"`
+        TopRawThickness      float32     `bson:"top_raw_thickness,omitempty" json:"top_raw_thickness,omitempty"`
 		TopColor               Color         `bson:"top_color" json:"top_color"`
 		TopTexture             string        `bson:"top_texture,omitempty" json:"top_texture,omitempty"`
+        TopSwatch              string           `bson:"top_swatch,omitempty" json:"top_swatch,omitempty"`
 		TopManufacturerCode    string        `bson:"top_manufacturer_code" json:"-"`
 		BottomThickness        float32       `bson:"bottom_thickness,omitempty" json:"bottom_thickness,omitempty"`
+        BottomRawThickness      float32     `bson:"bottom_raw_thickness,omitempty" json:"bottom_raw_thickness,omitempty"`
 		BottomColor            Color         `bson:"bottom_color,omitempty" json:"bottom_color,omitempty"`
 		BottomTexture          string        `bson:"bottom_texture,omitempty" json:"bottom_texture,omitempty"`
 		BottomManufacturerCode string        `bson:"bottom_manufacturer_code,omitempty" json:"bottom_manufacturer_code,omitempty"`
