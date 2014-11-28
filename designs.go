@@ -130,8 +130,10 @@ func getDesignRender(ctx context.Context) error {
 		materialId = matId
 	}
 
-	left := des.Front.Outercurve.Scale(10)
-	right := des.Front.Outercurve.Scale(10)
+	//left := des.Front.Outercurve.Scale(10)
+	//right := des.Front.Outercurve.Scale(10)
+	left := des.Front.Outercurve.Scale(9.3)
+	right := des.Front.Outercurve.Scale(9.3)
 
 	filename := fmt.Sprintf("%v-%v.png", designId.Str(), materialId)
 	url := fmt.Sprintf("http://%v/static/%v", ctx.HttpRequest().Host, filename)
@@ -184,8 +186,10 @@ func getDesignRender(ctx context.Context) error {
 		gc.CubicCurveTo(bez[2][0], bez[2][1], bez[1][0], bez[1][1], bez[0][0], bez[0][1])
 	}
 
-	lens_l := des.Front.Lens.Scale(10)
-	lens_r := des.Front.Lens.Scale(10)
+	//lens_l := des.Front.Lens.Scale(10)
+	//lens_l := des.Front.Lens.Scale(10)
+	lens_l := des.Front.Lens.Scale(9.3)
+	lens_r := des.Front.Lens.Scale(9.3)
 	for i, pt := range lens_l {
 		lens_l[i] = geometry.Point{pt[0] + 1000, pt[1] - miny}
 		lens_r[i] = geometry.Point{-1*pt[0] + 1000, pt[1] - miny}
@@ -200,9 +204,14 @@ func getDesignRender(ctx context.Context) error {
 	for _, bez := range lens_bzr_r {
 		gc.CubicCurveTo(bez[1][0], bez[1][1], bez[2][0], bez[2][1], bez[3][0], bez[3][1])
 	}
+ 
 	gc.FillStroke()
 
+    log.Println("material:")
+    log.Println(material)
+    log.Println("top:", material.TopTexture)
 	if len(material.TopTexture) > 0 {
+        log.Println("Applying top texture", material.TopTexture)
 		// load the image of top texture and apply it
 		if imFile, err := os.Open(material.TopTexture); err == nil {
 			defer imFile.Close()
@@ -224,6 +233,7 @@ func getDesignRender(ctx context.Context) error {
 		}
 
 	}
+
 
 	saveToPngFile(filename, im)
 

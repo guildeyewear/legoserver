@@ -234,6 +234,7 @@ type (
         BottomRawThickness      float32     `bson:"bottom_raw_thickness,omitempty" json:"bottom_raw_thickness,omitempty"`
 		BottomColor            Color         `bson:"bottom_color,omitempty" json:"bottom_color,omitempty"`
 		BottomTexture          string        `bson:"bottom_texture,omitempty" json:"bottom_texture,omitempty"`
+        BottomSwatch              string           `bson:"bottom_swatch,omitempty" json:"bottom_swatch,omitempty"`
 		BottomManufacturerCode string        `bson:"bottom_manufacturer_code,omitempty" json:"bottom_manufacturer_code,omitempty"`
 		Stock                  int32         `bson:"stock" json:"stock"`
 		PhotoUrls              []string      `bson:"photo_urls,omitempty" json:"photo_urls,omitempty"`
