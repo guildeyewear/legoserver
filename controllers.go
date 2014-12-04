@@ -146,9 +146,22 @@ func (m *materialsController) Create(ctx context.Context) error {
 }
 
 func (m *materialsController) ReadMany(ctx context.Context) error {
+    filter := ctx.PathParams().Get("filter").Str()
+    log.Println("PathParams: ", ctx.PathParams())
+    if filter == "" {
+        filter = "fronts"
+    }
+
 	log.Println("Getting all materials")
 	materials, err := models.GetAllMaterials()
-	log.Printf("Materials %v", materials)
+    if filter == "fronts" {
+        var filtered []models.Material
+        for _, mat := range(materials) {
+            if mat.TempleOnly == false {
+                filtered = append(filtered, mat)
+            }
+        }
+   }
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}

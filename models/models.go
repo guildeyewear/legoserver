@@ -238,6 +238,7 @@ type (
 		BottomManufacturerCode string        `bson:"bottom_manufacturer_code,omitempty" json:"bottom_manufacturer_code,omitempty"`
 		Stock                  int32         `bson:"stock" json:"stock"`
 		PhotoUrls              []string      `bson:"photo_urls,omitempty" json:"photo_urls,omitempty"`
+        TempleOnly              bool    `bson:"temples_only,omitempty" json:"temples_only"`
 	}
 )
 
