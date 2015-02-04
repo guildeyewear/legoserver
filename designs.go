@@ -32,14 +32,14 @@ func (m *designController) ReadMany(ctx context.Context) error {
 
 func getCollectionDesigns(ctx context.Context) error {
 	collection := ctx.QueryValue("collection")
-    log.Println("Collection is ", collection)
-    var designs []models.Design
-    var err error
-    if len(collection) == 0 {
-        designs, err = models.GetAllDesigns()
-    } else {
-        designs, err = models.GetDesignsWithCollection(collection)
-    }
+	log.Println("Collection is ", collection)
+	var designs []models.Design
+	var err error
+	if len(collection) == 0 {
+		designs, err = models.GetAllDesigns()
+	} else {
+		designs, err = models.GetDesignsWithCollection(collection)
+	}
 	if err != nil {
 		return goweb.API.RespondWithError(ctx, 400, err.Error())
 	}
@@ -47,27 +47,7 @@ func getCollectionDesigns(ctx context.Context) error {
 	return goweb.API.WriteResponseObject(ctx, 200, designs)
 }
 
-func importDesign(ctx context.Context) error {
-	log.Println("Importing design")
-	//userdata := ctx.Data()["user"]
-	//if userdata == nil {
-	//		return goweb.API.RespondWithError(ctx, 401, "Unauthorized")
-	//	}
-	//	user := userdata.(models.User)
-
-	// Read the data
-	data, err := ctx.RequestBody()
-	if err != nil {
-		return goweb.API.RespondWithError(ctx, 400, err.Error())
-	}
-
-	var old_design interface{}
-	err = json.Unmarshal(data, &old_design)
-	if err != nil {
-		return goweb.API.RespondWithError(ctx, 400, err.Error())
-	}
-	import_design := old_design.(map[string]interface{})
-
+func convertDesign(import_design map[string]interface{}) models.Design {
 	design := models.Design{}
 	design.Name = import_design["name"].(string)
 	design.Collections = []string{import_design["collection"].(string)}
@@ -105,7 +85,30 @@ func importDesign(ctx context.Context) error {
 	temple.TempleSeparation = int16(location["x"].(float64) * 100)
 	temple.TempleHeight = int16(location["y"].(float64) * 100)
 	design.Temple = temple
+	return design
+}
 
+func importDesign(ctx context.Context) error {
+	log.Println("Importing design")
+	//userdata := ctx.Data()["user"]
+	//if userdata == nil {
+	//		return goweb.API.RespondWithError(ctx, 401, "Unauthorized")
+	//	}
+	//	user := userdata.(models.User)
+
+	// Read the data
+	data, err := ctx.RequestBody()
+	if err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	}
+
+	var old_design interface{}
+	err = json.Unmarshal(data, &old_design)
+	if err != nil {
+		return goweb.API.RespondWithError(ctx, 400, err.Error())
+	}
+	import_design := old_design.(map[string]interface{})
+	design := convertDesign(import_design)
 	if err = models.InsertDesign(&design); err != nil {
 		return goweb.API.RespondWithError(ctx, 500, err.Error())
 	}
@@ -139,7 +142,7 @@ func getDesignRender(ctx context.Context) error {
 	url := fmt.Sprintf("http://%v/static/%v", ctx.HttpRequest().Host, filename)
 	type renderResponse struct {
 		Url           string  `json:"url"`
-		YOrigin      float64 `json:"y_origin"`
+		YOrigin       float64 `json:"y_origin"`
 		PixelsDensity int16   `json:"pixels_per_mm"`
 	}
 	//	fstat, err := os.Stat(fmt.Sprintf("./static-files/%v", filename))
@@ -158,14 +161,14 @@ func getDesignRender(ctx context.Context) error {
 	}
 	// PNG image.  Dimensions by convention, correspond to 1mm : 10px
 	im := image.NewRGBA(image.Rect(0, 0, 2000, 900))
-//
-//	// Offset the frame so it just fits on the canvas
+	//
+	//	// Offset the frame so it just fits on the canvas
 	_, miny := left.MinValues()
 	for i, pt := range left {
 		left[i] = geometry.Point{pt[0] + 1000, pt[1] - miny}     // Center on graphic
 		right[i] = geometry.Point{pt[0]*-1 + 1000, pt[1] - miny} // Center on graphic
 	}
-    log.Printf("Left endpoints: %v, %v", left[0], left[len(left)-1])
+	log.Printf("Left endpoints: %v, %v", left[0], left[len(left)-1])
 
 	dc := material.TopColor
 	fillColor := color.RGBA{uint8(dc[0]), uint8(dc[1]), uint8(dc[2]), uint8(dc[3])}
@@ -204,14 +207,14 @@ func getDesignRender(ctx context.Context) error {
 	for _, bez := range lens_bzr_r {
 		gc.CubicCurveTo(bez[1][0], bez[1][1], bez[2][0], bez[2][1], bez[3][0], bez[3][1])
 	}
- 
+
 	gc.FillStroke()
 
-    log.Println("material:")
-    log.Println(material)
-    log.Println("top:", material.TopTexture)
+	log.Println("material:")
+	log.Println(material)
+	log.Println("top:", material.TopTexture)
 	if len(material.TopTexture) > 0 {
-        log.Println("Applying top texture", material.TopTexture)
+		log.Println("Applying top texture", material.TopTexture)
 		// load the image of top texture and apply it
 		if imFile, err := os.Open(material.TopTexture); err == nil {
 			defer imFile.Close()
@@ -234,10 +237,9 @@ func getDesignRender(ctx context.Context) error {
 
 	}
 
-
 	saveToPngFile(filename, im)
 
-	dinfo := renderResponse{url, miny/-10.0, 10}
+	dinfo := renderResponse{url, miny / -10.0, 10}
 	return goweb.API.WriteResponseObject(ctx, 200, dinfo)
 }
 

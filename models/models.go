@@ -225,21 +225,21 @@ type (
 		Id                     bson.ObjectId `bson:"_id" json:"id"`
 		Name                   string        `bson:"name" json:"name"`
 		TopThickness           float32       `bson:"top_thickness" json:"top_thickness"`
-        TopRawThickness      float32     `bson:"top_raw_thickness,omitempty" json:"top_raw_thickness,omitempty"`
+		TopRawThickness        float32       `bson:"top_raw_thickness,omitempty" json:"top_raw_thickness,omitempty"`
 		TopColor               Color         `bson:"top_color" json:"top_color"`
 		TopTexture             string        `bson:"top_texture,omitempty" json:"top_texture,omitempty"`
-        TopSwatch              string           `bson:"top_swatch,omitempty" json:"top_swatch,omitempty"`
+		TopSwatch              string        `bson:"top_swatch,omitempty" json:"top_swatch,omitempty"`
 		TopManufacturerCode    string        `bson:"top_manufacturer_code" json:"-"`
 		BottomThickness        float32       `bson:"bottom_thickness,omitempty" json:"bottom_thickness,omitempty"`
-        BottomRawThickness      float32     `bson:"bottom_raw_thickness,omitempty" json:"bottom_raw_thickness,omitempty"`
+		BottomRawThickness     float32       `bson:"bottom_raw_thickness,omitempty" json:"bottom_raw_thickness,omitempty"`
 		BottomColor            Color         `bson:"bottom_color,omitempty" json:"bottom_color,omitempty"`
 		BottomTexture          string        `bson:"bottom_texture,omitempty" json:"bottom_texture,omitempty"`
-        BottomSwatch              string           `bson:"bottom_swatch,omitempty" json:"bottom_swatch,omitempty"`
+		BottomSwatch           string        `bson:"bottom_swatch,omitempty" json:"bottom_swatch,omitempty"`
 		BottomManufacturerCode string        `bson:"bottom_manufacturer_code,omitempty" json:"bottom_manufacturer_code,omitempty"`
 		Stock                  int32         `bson:"stock" json:"stock"`
 		PhotoUrls              []string      `bson:"photo_urls,omitempty" json:"photo_urls,omitempty"`
-        TempleMaterial      bson.ObjectId `bson:"temple_material,omitempty" json:"temple_material,omitempty"`
-        TempleOnly              bool    `bson:"temples_only,omitempty" json:"temples_only"`
+		TempleMaterial         bson.ObjectId `bson:"temple_material,omitempty" json:"temple_material,omitempty"`
+		TempleOnly             bool          `bson:"temples_only,omitempty" json:"temples_only"`
 	}
 )
 
@@ -325,6 +325,7 @@ type (
 		Id              bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 		AccountId       bson.ObjectId `bson:"account_id" json:"account_id"`
 		DesignId        bson.ObjectId `bson:"design_id" json:"design_id"`
+		LegacyDesignId  int           `bson:"legacy_design_id,omitempty", json:"legacy_design_id,omitempty"`
 		CreatedDate     time.Time     `bson:"created_at" json:"created_at"`
 		Status          int16         `bson:"status" json:"status"`
 		CustomerInfo    PersonInfo    `bson:"customer_info" json:"customer_info"`
@@ -332,7 +333,7 @@ type (
 		FrontMaterial   bson.ObjectId `bson:"front_material_id" json:"front_material_id"`
 		TempleMaterial  bson.ObjectId `bson:"temple_material_id" json:"temple_material_id"`
 		Scale           float64       `bson:"scale" json:"scale"`
-		YPosition       float64         `bson:"y_position" json:"y_position"`
+		YPosition       float64       `bson:"y_position" json:"y_position"`
 		LeftTempleText  string        `bson:"left_temple_text" json:"left_temple_text"`
 		RightTempleText string        `bson:"right_temple_text" json:"right_temple_text"`
 	}
@@ -386,10 +387,10 @@ func GetAllOrders() (os []Order, err error) {
 }
 
 func UpdateOrderStatus(id string, status int) (err error) {
-    withCollection("orders", func(c *mgo.Collection) {
-        err = c.UpdateId(bson.ObjectIdHex(id), bson.M{"$set": bson.M{"status": 1}})
-    })
-    return
+	withCollection("orders", func(c *mgo.Collection) {
+		err = c.UpdateId(bson.ObjectIdHex(id), bson.M{"$set": bson.M{"status": 1}})
+	})
+	return
 }
 
 // Utility function for managing Mongodb sessions
