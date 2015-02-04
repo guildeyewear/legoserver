@@ -25,7 +25,23 @@ func mapRoutes() {
 
 	goweb.MapBefore(func(c context.Context) error {
 		r := c.HttpRequest()
+        rw := c.HttpResponseWriter()
 		log.Printf("%v: %v", r.Method, r.URL.Path)
+
+        // Set CORS headers
+        log.Printf("Checking for origin")
+        if origin := r.Header.Get("Origin"); origin != "" {
+            log.Printf("Setting CORS headers")
+            rw.Header().Set("Access-Control-Allow-Origin", origin)
+            rw.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+            rw.Header().Set("Access-Control-Allow-Headers",
+                "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization")
+        }
+        // Stop here if its Preflighted OPTIONS request
+        if r.Method == "OPTIONS" {
+            return nil
+        }
+
 		authheader := c.HttpRequest().Header["Authorization"]
 		if len(authheader) == 0 {
 			return nil
