@@ -324,8 +324,8 @@ type (
 	Order struct {
 		Id              bson.ObjectId `bson:"_id,omitempty" json:"id,omitempty"`
 		AccountId       bson.ObjectId `bson:"account_id" json:"account_id"`
-		DesignId        bson.ObjectId `bson:"design_id" json:"design_id"`
-		LegacyDesignId  int           `bson:"legacy_design_id,omitempty", json:"legacy_design_id,omitempty"`
+		DesignId        bson.ObjectId `bson:"design_id,omitempty" json:"design_id,omitempty"`
+		LegacyDesignId  int           `bson:"legacy_design_id,omitempty" json:"legacy_design_id,omitempty"`
 		CreatedDate     time.Time     `bson:"created_at" json:"created_at"`
 		Status          int16         `bson:"status" json:"status"`
 		CustomerInfo    PersonInfo    `bson:"customer_info" json:"customer_info"`
